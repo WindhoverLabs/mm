@@ -1,6 +1,6 @@
 /************************************************************************
 ** File:
-**   $Id: mm_events.h 1.13 2015/04/06 15:41:22EDT lwalling Exp  $
+**   $Id: mm_events.h 1.1 2015/07/28 12:21:42EDT rperera Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -23,6 +23,9 @@
 ** Notes:
 **
 **   $Log: mm_events.h  $
+**   Revision 1.1 2015/07/28 12:21:42EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/src/project.pj
 **   Revision 1.13 2015/04/06 15:41:22EDT lwalling 
 **   Verify results of calls to PSP memory read/write/copy/set functions
 **   Revision 1.12 2015/03/02 14:26:33EST sstrege 

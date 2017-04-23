@@ -35,12 +35,11 @@ PACKET Pxxxx APID=nnnn, DESC="$sc $cpu MM Telemetry Data Packet",
   UB   $sc_$cpu_MM_CMDEC       DESC="$sc $cpu MM Command Error Counter",
                                UNITS=Counts, YH=1, DOLIMIT
 !
-  UB   $sc_$cpu_MM_LastActn  DESC="$sc $cpu MM Last command Action taken",
-                             DISCRETE, DRANGE=(0,1,2,3,4,5,6,7,8,9,10,11,12,13),
-                             DLABEL=("No Action","Peek","Poke","Load File",
-                             "Load WID","Dump File","Dump Event","Fill",
-                             "Symbol Lookup","Symbol Dump","Write Enable",
-			     "Write Disable","NOOP","Reset")
+  UB   $sc_$cpu_MM_LastActn    DESC="$sc $cpu MM Last command Action taken",
+                               DISCRETE, DRANGE=(0,1,2,3,4,5,6,7,8,9),
+                               DLABEL=("No Action","Peek","Poke","Load File",
+                               "Load WID","Dump File","Dump Event","Fill",
+                               "Symbol Lookup","Symbol Dump")
 !
   UB   $sc_$cpu_MM_MemType     DESC="$sc $cpu MM Memory Type for last command",
                                DISCRETE, DRANGE=(0,1,2,3,4,5), DLABEL=("None",
@@ -48,7 +47,7 @@ PACKET Pxxxx APID=nnnn, DESC="$sc $cpu MM Telemetry Data Packet",
 !
   ULI  $sc_$cpu_MM_Address     DESC="$sc $cpu MM address used for last command"
 !
-  ULI  $sc_$cpu_MM_DataValue  DESC="$sc $cpu MM Data Value used with the last command"
+  ULI  $sc_$cpu_MM_FillPattern DESC="$sc $cpu MM Fill Pattern used"
 !
   ULI  $sc_$cpu_MM_BytesProc   DESC="$sc $cpu MM the number of bytes processed for the last command"
 !

@@ -1,6 +1,6 @@
 /*************************************************************************
 ** File:
-**   $Id: mm_dump.c 1.15 2015/04/14 15:29:03EDT lwalling Exp  $
+**   $Id: mm_dump.c 1.6 2016/10/31 00:15:54EDT mdeschu Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -15,6 +15,19 @@
 **   Functions used for processing CFS Memory Manager memory dump commands
 **
 **   $Log: mm_dump.c  $
+**   Revision 1.6 2016/10/31 00:15:54EDT mdeschu 
+**   Add missing default switch case to MM_DumpMemToFileCmd and MM_FillDumpInEventBuffer
+**   Revision 1.5 2016/10/30 00:48:50EDT mdeschu 
+**   Use c-style casts to clean up compiler warnings in calls to CFE_EVS_SendEvent
+**   Revision 1.4 2016/10/28 17:49:17EDT mdeschu 
+**   Trac #32: Fix MM SendEvent buffer overrun
+**   Revision 1.3 2015/12/29 15:25:54EST czogby 
+**   Move function prototypes from .c files into .h files
+**   Revision 1.2 2015/12/15 13:10:44EST czogby 
+**   Change error message to print value of SegmentSize
+**   Revision 1.1 2015/07/28 12:21:38EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/src/project.pj
 **   Revision 1.15 2015/04/14 15:29:03EDT lwalling 
 **   Removed unnecessary backslash characters from string format definitions
 **   Revision 1.14 2015/04/06 15:41:25EDT lwalling 
@@ -61,190 +74,7 @@
 /*************************************************************************
 ** External Data
 *************************************************************************/
-extern MM_AppData_t MM_AppData; 
-
-/*************************************************************************
-** Local Function Prototypes
-*************************************************************************/
-/************************************************************************/
-/** \brief Memory peek
-**  
-**  \par Description
-**       Support function for #MM_PeekCmd. This routine will read 
-**       8, 16, or 32 bits of data and send it in an event message.
-**
-**  \par Assumptions, External Events, and Notes:
-**       None
-**       
-**  \param [in]   CmdPtr       A #MM_PeekCmd_t pointer to the peek 
-**                             command message
-**
-**  \param [in]   SrcAddress   The source address for the peek operation 
-** 
-*************************************************************************/
-void MM_PeekMem (MM_PeekCmd_t *CmdPtr, 
-                 uint32       SrcAddress);
-
-/************************************************************************/
-/** \brief Memory dump to file
-**  
-**  \par Description
-**       Support function for #MM_DumpMemToFileCmd. This routine will 
-**       read an address range and store the data in a file.
-**
-**  \par Assumptions, External Events, and Notes:
-**       None
-**       
-**  \param [in]   FileHandle   The open file handle of the dump file  
-**
-**  \param [in]   FileName     A pointer to a character string holding  
-**                             the dump file name
-**
-**  \param [in]   FileHeader   A #MM_LoadDumpFileHeader_t pointer to  
-**                             the dump file header structure initialized
-**                             with data based upon the command message 
-**                             parameters
-**
-**  \returns
-**  \retstmt Returns TRUE if the dump completed successfully  \endcode
-**  \retstmt Returns FALSE if the dump failed due to an error \endcode
-**  \endreturns
-** 
-*************************************************************************/
-boolean MM_DumpMemToFile(uint32                   FileHandle, 
-                         char                     *FileName, 
-                         MM_LoadDumpFileHeader_t  *FileHeader);
-
-/************************************************************************/
-/** \brief Verify memory dump to file parameters
-**  
-**  \par Description
-**       This routine will run various checks on the source address, 
-**       memory type, and data size (in bytes) for a dump memory to
-**       file command.
-**
-**  \par Assumptions, External Events, and Notes:
-**       None
-**       
-**  \param [in]   Address       The source address for the requested 
-**                              dump operation 
-**
-**  \param [in]   MemType       The source memory type for the requested 
-**                              dump operation  
-**
-**  \param [in]   SizeInBytes   The number of bytes for the requested 
-**                              dump operation 
-**
-**  \returns
-**  \retstmt Returns TRUE if all the parameter checks passed  \endcode
-**  \retstmt Returns FALSE any parameter check failed         \endcode
-**  \endreturns
-**
-*************************************************************************/
-boolean MM_VerifyFileDumpParams(uint32 Address, 
-                                uint8  MemType, 
-                                uint32 SizeInBytes);
-
-/************************************************************************/
-/** \brief Write the cFE primary and and MM secondary file headers
-**  
-**  \par Description
-**       Support function for #MM_DumpMemToFileCmd. This routine will 
-**       write the cFE primary and MM secondary headers to the
-**       file specified by the FileHandle.
-**
-**  \par Assumptions, External Events, and Notes:
-**       None
-**       
-**  \param [in]   FileName     A pointer to a character string holding  
-**                             the file name (used only for error event
-**                             messages).
-**
-**  \param [in]   FileHandle   File Descriptor obtained from a previous
-**                             call to #OS_open that is associated with
-**                             the file whose headers are to be written.
-**
-**  \param [in]   CFEHeader    A #CFE_FS_Header_t pointer to the
-**                             cFE primary file header structure to be
-**                             written.
-**
-**  \param [in]   MMHeader     A #MM_LoadDumpFileHeader_t pointer to 
-**                             the MM secondary file header structure
-**                             to be written.
-**
-**  \returns
-**  \retstmt Returns TRUE if the headers were written successfully \endcode
-**  \retstmt Returns FALSE if a write error occurred \endcode
-**  \endreturns
-** 
-*************************************************************************/
-boolean MM_WriteFileHeaders(char                    *FileName,
-                            int32                    FileHandle,
-                            CFE_FS_Header_t         *CFEHeader,
-                            MM_LoadDumpFileHeader_t *MMHeader);
-
-/************************************************************************/
-/** \brief Verify memory dump in event message parameters
-**  
-**  \par Description
-**       This routine will run various checks on the source address, 
-**       memory type, and data size (in bytes) for a dump memory in
-**       event message command.
-**
-**  \par Assumptions, External Events, and Notes:
-**       None
-**       
-**  \param [in]   Address       The source address for the requested 
-**                              dump operation 
-**
-**  \param [in]   MemType       The source memory type for the requested 
-**                              dump operation  
-**
-**  \param [in]   SizeInBytes   The number of bytes for the requested 
-**                              dump operation 
-**
-**  \returns
-**  \retstmt Returns TRUE if all the parameter checks passed  \endcode
-**  \retstmt Returns FALSE any parameter check failed         \endcode
-**  \endreturns
-**
-*************************************************************************/
-boolean MM_VerifyDumpInEventParams(uint32 Address, 
-                                   uint8  MemType, 
-                                   uint32 SizeInBytes);
-
-/************************************************************************/
-/** \brief Fill dump memory in event message buffer
-**  
-**  \par Description
-**       Support function for #MM_DumpInEventCmd. This routine will 
-**       read an address range and store the data in a byte array.
-**       It will properly adjust for optional memory types that may
-**       require 16 or 32 bit reads.
-**
-**  \par Assumptions, External Events, and Notes:
-**       None
-**       
-**  \param [in]   SrcAddress   The source address to read from 
-**
-**  \param [in]   CmdPtr       A #MM_DumpInEventCmd_t pointer to the  
-**                             dump in event command message
-**
-**  \param [in]   DumpBuffer   A pointer to the byte array to store
-**                             the dump data in
-**
-**  \param [out]  *DumpBuffer  A pointer to the byte array holding the
-**                             dump data
-**
-**  \returns
-**  \retstmt Returns TRUE if all PSP memory access functions succeed  \endcode
-**  \retstmt Returns FALSE if any PSP memory access function fails    \endcode
-**  \endreturns
-**
-*************************************************************************/
-boolean MM_FillDumpInEventBuffer(uint32              SrcAddress, 
-                                 MM_DumpInEventCmd_t *CmdPtr, 
-                                 uint8               *DumpBuffer);
+extern MM_AppData_t MM_AppData;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                                                 */
@@ -326,7 +156,7 @@ void MM_PeekMem (MM_PeekCmd_t *CmdPtr,
             BytesProcessed = sizeof (uint8);
             CFE_EVS_SendEvent(MM_PEEK_BYTE_INF_EID, CFE_EVS_INFORMATION,
                "Peek Command: Addr = 0x%08X Size = 8 bits Data = 0x%02X", 
-                SrcAddress, ByteValue);
+                (unsigned int)SrcAddress, ByteValue);
          }
          else
          {
@@ -334,7 +164,7 @@ void MM_PeekMem (MM_PeekCmd_t *CmdPtr,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_PSP_READ_ERR_EID, CFE_EVS_ERROR,
                "PSP read memory error: RC=0x%08X, Address=0x%08X, MemType=MEM8", 
-                PSP_Status, SrcAddress);
+                (unsigned int)PSP_Status, (unsigned int)SrcAddress);
          }
          break;
          
@@ -347,7 +177,7 @@ void MM_PeekMem (MM_PeekCmd_t *CmdPtr,
             BytesProcessed = sizeof (uint16);
             CFE_EVS_SendEvent(MM_PEEK_WORD_INF_EID, CFE_EVS_INFORMATION,
                "Peek Command: Addr = 0x%08X Size = 16 bits Data = 0x%04X",
-                SrcAddress, DataValue);
+                (unsigned int)SrcAddress, (unsigned short)DataValue);
          }
          else
          {
@@ -355,7 +185,7 @@ void MM_PeekMem (MM_PeekCmd_t *CmdPtr,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_PSP_READ_ERR_EID, CFE_EVS_ERROR,
                "PSP read memory error: RC=0x%08X, Address=0x%08X, MemType=MEM16", 
-                PSP_Status, SrcAddress);
+                (unsigned int)PSP_Status, (unsigned int)SrcAddress);
          }
          break;
          
@@ -368,7 +198,7 @@ void MM_PeekMem (MM_PeekCmd_t *CmdPtr,
             BytesProcessed = sizeof(uint32);
             CFE_EVS_SendEvent(MM_PEEK_DWORD_INF_EID, CFE_EVS_INFORMATION,
                "Peek Command: Addr = 0x%08X Size = 32 bits Data = 0x%08X", 
-                SrcAddress, DataValue);
+                (unsigned int)SrcAddress, (unsigned int)DataValue);
          }
          else
          {
@@ -376,7 +206,7 @@ void MM_PeekMem (MM_PeekCmd_t *CmdPtr,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_PSP_READ_ERR_EID, CFE_EVS_ERROR,
                "PSP read memory error: RC=0x%08X, Address=0x%08X, MemType=MEM32", 
-                PSP_Status, SrcAddress);
+                (unsigned int)PSP_Status, (unsigned int)SrcAddress);
          }
          break;
          
@@ -496,6 +326,11 @@ void MM_DumpMemToFileCmd(CFE_SB_MsgPtr_t MessagePtr)
                            Valid = MM_DumpMem8ToFile(FileHandle, CmdPtr->FileName, &MMFileHeader);
                            break;
 #endif /* MM_OPT_CODE_MEM8_MEMTYPE */                           
+                        default:
+                           /* This branch will never be executed. MMFileHeader.MemType will always
+                            * be valid value for this switch statement it is verified via
+                            * MM_VerifyFileDumpParams */
+                           break;
                      }
                      
                      if(Valid == TRUE)
@@ -520,7 +355,7 @@ void MM_DumpMemToFileCmd(CFE_SB_MsgPtr_t MessagePtr)
                         {
                            MM_AppData.ErrCounter++;
                            CFE_EVS_SendEvent(MM_CFS_COMPUTECRCFROMFILE_ERR_EID, CFE_EVS_ERROR,
-                                       "CFS_ComputeCRCFromFile error received: RC = 0x%08X File = '%s'", OS_Status, 
+                                       "CFS_ComputeCRCFromFile error received: RC = 0x%08X File = '%s'", (unsigned int)OS_Status, 
                                                                                                CmdPtr->FileName);
                         } 
                         
@@ -531,7 +366,7 @@ void MM_DumpMemToFileCmd(CFE_SB_MsgPtr_t MessagePtr)
                         MM_AppData.CmdCounter++;
                         CFE_EVS_SendEvent(MM_DMP_MEM_FILE_INF_EID, CFE_EVS_INFORMATION,
                                 "Dump Memory To File Command: Dumped %d bytes from address 0x%08X to file '%s'", 
-                                MM_AppData.BytesProcessed, SrcAddress, CmdPtr->FileName);
+                                (int)MM_AppData.BytesProcessed, (unsigned int)SrcAddress, CmdPtr->FileName);
                         /* 
                         ** Update last action statistics
                         */
@@ -555,7 +390,7 @@ void MM_DumpMemToFileCmd(CFE_SB_MsgPtr_t MessagePtr)
                      MM_AppData.ErrCounter++;
                      CFE_EVS_SendEvent(MM_OS_CLOSE_ERR_EID, CFE_EVS_ERROR,
                                        "OS_close error received: RC = 0x%08X File = '%s'", 
-                                                           OS_Status, CmdPtr->FileName);
+                                                           (unsigned int)OS_Status, CmdPtr->FileName);
                   } 
                   
                } /* end OS_creat if */
@@ -564,7 +399,7 @@ void MM_DumpMemToFileCmd(CFE_SB_MsgPtr_t MessagePtr)
                   MM_AppData.ErrCounter++;
                   CFE_EVS_SendEvent(MM_OS_CREAT_ERR_EID, CFE_EVS_ERROR,
                                     "OS_creat error received: RC = 0x%08X File = '%s'", 
-                                                       FileHandle, CmdPtr->FileName);
+                                                       (unsigned int)FileHandle, CmdPtr->FileName);
                }
             
             } /* end MM_VerifyFileDumpParams if */
@@ -638,7 +473,7 @@ boolean MM_DumpMemToFile(uint32                  FileHandle,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_OS_WRITE_EXP_ERR_EID, CFE_EVS_ERROR,
                "OS_write error received: RC = 0x%08X, Expected = %d, File = '%s'", 
-                OS_Status, BytesRemaining, FileName);
+                (unsigned int)OS_Status, (int)SegmentSize, FileName);
          }
       }
       else
@@ -647,7 +482,7 @@ boolean MM_DumpMemToFile(uint32                  FileHandle,
          MM_AppData.ErrCounter++;
          CFE_EVS_SendEvent(MM_PSP_COPY_ERR_EID, CFE_EVS_ERROR,
             "PSP copy memory error: RC=0x%08X, Src=0x%08X, Tgt=0x%08X, Size=0x%08X", 
-             PSP_Status, (uint32) SourcePtr, (uint32) ioBuffer, SegmentSize);
+             (unsigned int)PSP_Status, (unsigned int) SourcePtr, (unsigned int)ioBuffer, (unsigned int)SegmentSize);
       }
    }
 
@@ -689,14 +524,14 @@ boolean MM_VerifyFileDumpParams(uint32 Address,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                         "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                        OS_Status, Address, SizeInBytes, CFE_PSP_MEM_RAM); 
+                        (unsigned int)OS_Status, (unsigned int)Address, (int)SizeInBytes, CFE_PSP_MEM_RAM); 
          }
          else if((SizeInBytes == 0) || (SizeInBytes > MM_MAX_DUMP_FILE_DATA_RAM))
          {
             Valid = FALSE;
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_DATA_SIZE_BYTES_ERR_EID, CFE_EVS_ERROR,
-                        "Data size in bytes invalid or exceeds limits: Data Size = %d", SizeInBytes);
+                        "Data size in bytes invalid or exceeds limits: Data Size = %d", (int)SizeInBytes);
          }
          break;
          
@@ -709,14 +544,14 @@ boolean MM_VerifyFileDumpParams(uint32 Address,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                         "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                        OS_Status, Address, SizeInBytes, CFE_PSP_MEM_EEPROM); 
+                        (unsigned int)OS_Status, (unsigned int)Address, (int)SizeInBytes, CFE_PSP_MEM_EEPROM); 
          }
          else if((SizeInBytes == 0) || (SizeInBytes > MM_MAX_DUMP_FILE_DATA_EEPROM))
          {
             Valid = FALSE;
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_DATA_SIZE_BYTES_ERR_EID, CFE_EVS_ERROR,
-                        "Data size in bytes invalid or exceeds limits: Data Size = %d", SizeInBytes);
+                        "Data size in bytes invalid or exceeds limits: Data Size = %d", (int)SizeInBytes);
          }
          break;
 
@@ -730,14 +565,14 @@ boolean MM_VerifyFileDumpParams(uint32 Address,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                         "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                        OS_Status, Address, SizeInBytes, CFE_PSP_MEM_RAM); 
+                        (unsigned int)OS_Status, (unsigned int)Address, (int)SizeInBytes, CFE_PSP_MEM_RAM); 
          }
          else if((SizeInBytes == 0) || (SizeInBytes > MM_MAX_DUMP_FILE_DATA_MEM32))
          {
             Valid = FALSE;
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_DATA_SIZE_BYTES_ERR_EID, CFE_EVS_ERROR,
-                        "Data size in bytes invalid or exceeds limits: Data Size = %d", SizeInBytes);
+                        "Data size in bytes invalid or exceeds limits: Data Size = %d", (int)SizeInBytes);
          }
          else if (CFS_Verify32Aligned(Address, SizeInBytes) != TRUE)
          {
@@ -745,7 +580,7 @@ boolean MM_VerifyFileDumpParams(uint32 Address,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_ALIGN32_ERR_EID, CFE_EVS_ERROR,
                      "Data and address not 32 bit aligned: Addr = 0x%08X Size = %d", 
-                                                              Address, SizeInBytes);
+                                                              (unsigned int)Address, (int)SizeInBytes);
          }
          break;
 #endif /* MM_OPT_CODE_MEM32_MEMTYPE */
@@ -760,14 +595,14 @@ boolean MM_VerifyFileDumpParams(uint32 Address,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                         "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                        OS_Status, Address, SizeInBytes, CFE_PSP_MEM_RAM); 
+                        (unsigned int)OS_Status, (unsigned int)Address, (int)SizeInBytes, CFE_PSP_MEM_RAM); 
          }
          else if((SizeInBytes == 0) || (SizeInBytes > MM_MAX_DUMP_FILE_DATA_MEM16))
          {
             Valid = FALSE;
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_DATA_SIZE_BYTES_ERR_EID, CFE_EVS_ERROR,
-                        "Data size in bytes invalid or exceeds limits: Data Size = %d", SizeInBytes);
+                        "Data size in bytes invalid or exceeds limits: Data Size = %d", (int)SizeInBytes);
          }
          else if (CFS_Verify16Aligned(Address, SizeInBytes) != TRUE)
          {
@@ -775,7 +610,7 @@ boolean MM_VerifyFileDumpParams(uint32 Address,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_ALIGN16_ERR_EID, CFE_EVS_ERROR,
                      "Data and address not 16 bit aligned: Addr = 0x%08X Size = %d", 
-                                                              Address, SizeInBytes);
+                                                              (unsigned int)Address, (int)SizeInBytes);
          }
          break;
 #endif /* MM_OPT_CODE_MEM16_MEMTYPE */
@@ -790,14 +625,14 @@ boolean MM_VerifyFileDumpParams(uint32 Address,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                         "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                        OS_Status, Address, SizeInBytes, CFE_PSP_MEM_RAM); 
+                        (unsigned int)OS_Status, (unsigned int)Address, (int)SizeInBytes, CFE_PSP_MEM_RAM); 
          }
          else if((SizeInBytes == 0) || (SizeInBytes > MM_MAX_DUMP_FILE_DATA_MEM8))
          {
             Valid = FALSE;
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_DATA_SIZE_BYTES_ERR_EID, CFE_EVS_ERROR,
-                        "Data size in bytes invalid or exceeds limits: Data Size = %d", SizeInBytes);
+                        "Data size in bytes invalid or exceeds limits: Data Size = %d", (int)SizeInBytes);
          }
          break;
 #endif /* MM_OPT_CODE_MEM8_MEMTYPE */
@@ -838,7 +673,7 @@ boolean MM_WriteFileHeaders(char                    *FileName,
       MM_AppData.ErrCounter++;
       CFE_EVS_SendEvent(MM_CFE_FS_WRITEHDR_ERR_EID, CFE_EVS_ERROR,
                         "CFE_FS_WriteHeader error received: RC = 0x%08X Expected = %d File = '%s'", 
-                        OS_Status, sizeof(CFE_FS_Header_t), FileName); 
+                        (unsigned int)OS_Status, sizeof(CFE_FS_Header_t), FileName); 
 
 
    } /* end CFE_FS_WriteHeader if */
@@ -855,7 +690,7 @@ boolean MM_WriteFileHeaders(char                    *FileName,
          MM_AppData.ErrCounter++;
          CFE_EVS_SendEvent(MM_OS_WRITE_EXP_ERR_EID, CFE_EVS_ERROR,
                            "OS_write error received: RC = 0x%08X Expected = %d File = '%s'", 
-                           OS_Status, sizeof(MM_LoadDumpFileHeader_t), FileName); 
+                           (unsigned int)OS_Status, sizeof(MM_LoadDumpFileHeader_t), FileName); 
 
       } /* end OS_write if */
       
@@ -917,9 +752,10 @@ static char                  EventString[CFE_EVS_MAX_MESSAGE_LENGTH];
                /* 
                ** Build dump data string
                ** Each byte of data requires 5 characters of string space 
+	       ** Note this really only allows up to ~15 bytes using default config
                */
                BytePtr = (uint8 *)DumpBuffer;
-               for (i = 0; i < CmdPtr->NumOfBytes; i++)            
+               for (i = 0; i < CmdPtr->NumOfBytes && i < MM_MAX_DUMP_INEVENT_BYTES; i++)
                {
                   sprintf(TempString, "0x%02X ", *BytePtr); 
                   strcat(EventString, TempString);
@@ -928,14 +764,13 @@ static char                  EventString[CFE_EVS_MAX_MESSAGE_LENGTH];
 
                /* 
                ** Append tail
-               ** This adds 25 characters including the NUL terminator 
+               ** This adds up to 33 characters including the NUL terminator 
                */
-               sprintf(TempString, "from address: 0x%08lX", SrcAddress); 
+               sprintf(TempString, "from address: 0x%08lX", (unsigned long)SrcAddress); 
                strcat(EventString, TempString);
 
                /* Send it out */
-               CFE_EVS_SendEvent(MM_DUMP_INEVENT_INF_EID, CFE_EVS_INFORMATION,
-                                                              EventString);
+               CFE_EVS_SendEvent(MM_DUMP_INEVENT_INF_EID, CFE_EVS_INFORMATION, "%s", EventString);
                /* Update telemetry */
                MM_AppData.LastAction = MM_DUMP_INEVENT;
                MM_AppData.MemType    = CmdPtr->MemType;
@@ -981,7 +816,7 @@ boolean MM_VerifyDumpInEventParams(uint32 Address,
       Valid = FALSE;
       MM_AppData.ErrCounter++;
       CFE_EVS_SendEvent(MM_DATA_SIZE_BYTES_ERR_EID, CFE_EVS_ERROR,
-                  "Data size in bytes invalid or exceeds limits: Data Size = %d", SizeInBytes);
+                  "Data size in bytes invalid or exceeds limits: Data Size = %d", (int)SizeInBytes);
    }
    else
    {
@@ -999,7 +834,7 @@ boolean MM_VerifyDumpInEventParams(uint32 Address,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                            "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                           OS_Status, Address, SizeInBytes, CFE_PSP_MEM_RAM); 
+                           (unsigned int)OS_Status, (unsigned int)Address, (int)SizeInBytes, CFE_PSP_MEM_RAM); 
             }
             break;
             
@@ -1012,7 +847,7 @@ boolean MM_VerifyDumpInEventParams(uint32 Address,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                            "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                           OS_Status, Address, SizeInBytes, CFE_PSP_MEM_EEPROM); 
+                           (unsigned int)OS_Status, (unsigned int)Address, (int)SizeInBytes, CFE_PSP_MEM_EEPROM); 
             }
             break;
 
@@ -1026,7 +861,7 @@ boolean MM_VerifyDumpInEventParams(uint32 Address,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                            "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                           OS_Status, Address, SizeInBytes, CFE_PSP_MEM_RAM); 
+                           (unsigned int)OS_Status, (unsigned int)Address, (int)SizeInBytes, CFE_PSP_MEM_RAM); 
             }
             else if (CFS_Verify32Aligned(Address, SizeInBytes) != TRUE)
             {
@@ -1034,7 +869,7 @@ boolean MM_VerifyDumpInEventParams(uint32 Address,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_ALIGN32_ERR_EID, CFE_EVS_ERROR,
                         "Data and address not 32 bit aligned: Addr = 0x%08X Size = %d",
-                                                                 Address, SizeInBytes);
+                                                                 (unsigned int)Address, (int)SizeInBytes);
             }
             break;
 #endif /* MM_OPT_CODE_MEM32_MEMTYPE */
@@ -1049,7 +884,7 @@ boolean MM_VerifyDumpInEventParams(uint32 Address,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                            "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                           OS_Status, Address, SizeInBytes, CFE_PSP_MEM_RAM); 
+                           (unsigned int)OS_Status, (unsigned int)Address, (int)SizeInBytes, CFE_PSP_MEM_RAM); 
             }
             else if (CFS_Verify16Aligned(Address, SizeInBytes) != TRUE)
             {
@@ -1057,7 +892,7 @@ boolean MM_VerifyDumpInEventParams(uint32 Address,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_ALIGN16_ERR_EID, CFE_EVS_ERROR,
                         "Data and address not 16 bit aligned: Addr = 0x%08X Size = %d",
-                                                                 Address, SizeInBytes);
+                                                                 (unsigned int)Address, (int)SizeInBytes);
             }
             break;
 #endif /* MM_OPT_CODE_MEM16_MEMTYPE */
@@ -1072,7 +907,7 @@ boolean MM_VerifyDumpInEventParams(uint32 Address,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                            "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                           OS_Status, Address, SizeInBytes, CFE_PSP_MEM_RAM); 
+                           (unsigned int)OS_Status, (unsigned int)Address, (int)SizeInBytes, CFE_PSP_MEM_RAM); 
             }
             break;
             
@@ -1118,7 +953,7 @@ boolean MM_FillDumpInEventBuffer(uint32              SrcAddress,
          {
             CFE_EVS_SendEvent(MM_PSP_COPY_ERR_EID, CFE_EVS_ERROR,
                "PSP copy memory error: RC=0x%08X, Src=0x%08X, Tgt=0x%08X, Size=0x%08X", 
-                PSP_Status, SrcAddress, (uint32) DumpBuffer, CmdPtr->NumOfBytes);
+                (unsigned int)PSP_Status, (unsigned int)SrcAddress, (unsigned int)DumpBuffer, (unsigned int)CmdPtr->NumOfBytes);
             MM_AppData.ErrCounter++;
             Valid = FALSE;
          }
@@ -1141,7 +976,7 @@ boolean MM_FillDumpInEventBuffer(uint32              SrcAddress,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_PSP_READ_ERR_EID, CFE_EVS_ERROR,
                   "PSP read memory error: RC=0x%08X, Src=0x%08X, Tgt=0x%08X, Type=MEM32", 
-                   PSP_Status, SrcAddress, (uint32) DumpBuffer);
+                   (unsigned int)PSP_Status, (unsigned int)SrcAddress, (unsigned int)DumpBuffer);
                /* Stop load dump buffer loop */
                break;
             }
@@ -1166,7 +1001,7 @@ boolean MM_FillDumpInEventBuffer(uint32              SrcAddress,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_PSP_READ_ERR_EID, CFE_EVS_ERROR,
                   "PSP read memory error: RC=0x%08X, Src=0x%08X, Tgt=0x%08X, Type=MEM16", 
-                   PSP_Status, SrcAddress, (uint32) DumpBuffer);
+                   (unsigned int)PSP_Status, (unsigned int)SrcAddress, (unsigned int)DumpBuffer);
                /* Stop load dump buffer loop */
                break;
             }
@@ -1191,13 +1026,18 @@ boolean MM_FillDumpInEventBuffer(uint32              SrcAddress,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_PSP_READ_ERR_EID, CFE_EVS_ERROR,
                   "PSP read memory error: RC=0x%08X, Src=0x%08X, Tgt=0x%08X, Type=MEM8", 
-                   PSP_Status, SrcAddress, (uint32) DumpBuffer);
+                   (unsigned int)PSP_Status, (unsigned int)SrcAddress, (unsigned int)DumpBuffer);
                /* Stop load dump buffer loop */
                break;
             }
          }
          break;
       #endif /* MM_OPT_CODE_MEM8_MEMTYPE */
+      default:
+         /* This branch will never be executed. CmdPtr->MemType will always
+          * be valid value for this switch statement it is verified via
+          * MM_VerifyDumpInEventParams */
+         break;
 
    } /* end CmdPtr->MemType switch */
    

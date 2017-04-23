@@ -1,6 +1,6 @@
 /*************************************************************************
 ** File:
-**   $Id: mm_platform_cfg.h 1.9 2015/03/02 14:26:59EST sstrege Exp  $
+**   $Id: mm_platform_cfg.h 1.3 2016/10/31 16:33:42EDT mdeschu Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -24,6 +24,13 @@
 ** Notes:
 **
 **   $Log: mm_platform_cfg.h  $
+**   Revision 1.3 2016/10/31 16:33:42EDT mdeschu 
+**   Change MM dump file CFE subtype from 0 to 4D4D5354 (MMST in ascii hex)
+**   Revision 1.2 2016/10/31 16:30:38EDT mdeschu 
+**   Move CFE subtype and description to public platform config header
+**   Revision 1.1 2015/07/28 12:21:20EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/platform_inc/project.pj
 **   Revision 1.9 2015/03/02 14:26:59EST sstrege 
 **   Added copyright information
 **   Revision 1.8 2010/11/29 13:34:44EST jmdagost 
@@ -44,6 +51,35 @@
 *************************************************************************/
 #ifndef _mm_platform_cfg_
 #define _mm_platform_cfg_
+
+/**
+**  \mmcfg Memory Managment File -- cFE file header sub-type
+**
+**  \par Description:
+**       This parameter defines the value that is used
+**       to identify a Memory Management file.
+**
+**  \par Limits:
+**       The file header data type for the value is 32 bits unsigned,
+**       thus the value can be anything from zero to 4,294,967,295.
+**       (limit is not verified)
+*/
+#define MM_CFE_HDR_SUBTYPE             0x4D4D5354
+
+
+/**
+**  \mmcfg Memory Management File -- cFE file header description
+**
+**  \par Description:
+**       This parameter defines the text string that
+**       may be used to identify Memory Management files.
+**
+**  \par Limits:
+**       The string length (including string terminator) cannot exceed
+**       #CFE_FS_HDR_DESC_MAX_LEN.  (limit is not verified)
+*/
+#define MM_CFE_HDR_DESCRIPTION         "Memory Manager dump file"
+
 
 /** \mmcfg Maximum number of bytes for a file load to RAM memory
 **  

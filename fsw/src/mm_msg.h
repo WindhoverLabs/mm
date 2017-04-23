@@ -1,6 +1,6 @@
 /************************************************************************
 ** File:
-**   $Id: mm_msg.h 1.9 2015/03/20 14:16:54EDT lwalling Exp  $
+**   $Id: mm_msg.h 1.1 2015/07/28 12:22:00EDT rperera Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -29,6 +29,9 @@
 **   info).
 **
 **   $Log: mm_msg.h  $
+**   Revision 1.1 2015/07/28 12:22:00EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/src/project.pj
 **   Revision 1.9 2015/03/20 14:16:54EDT lwalling 
 **   Add last peek/poke/fill command data value to housekeeping telemetry
 **   Revision 1.8 2015/03/02 14:26:35EST sstrege 

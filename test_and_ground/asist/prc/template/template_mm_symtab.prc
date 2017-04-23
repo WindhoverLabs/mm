@@ -149,6 +149,10 @@ PROC $sc_$cpu_mm_symtab
 ;                                       in place of FillPattern and updated the
 ;                                       requirements to add 3400 and 3500 and
 ;                                       the wording changes for 8000 and 9000
+;       11/14/16        Walt Moleski    Updated for MM 2.4.1.0 using CPU1 for
+;                                       commanding and added a hostCPU variable
+;                                       for the utility procs to connect to the
+;                                       proper host IP address.
 ;
 ;  Arguments
 ;	None.
@@ -267,10 +271,12 @@ LOCAL rawcmd
 LOCAL MMAppName = "MM"
 LOCAL ramDir = "RAM:0"
 
-;; This define is calculated in the mm_dump.c file and could not be used
+local hostCPU = "$CPU"
+
+;; This define is calculated in the mm_dump.h file and could not be used
 ;; directly from the MM source. Thus, if this size changes, this calculation
 ;; must be changed here
-#define MM_MAX_DUMP_INEVENT_BYTES ((CFE_EVS_MAX_MESSAGE_LENGTH - (13 + 25)) / 5)
+#define MM_MAX_DUMP_INEVENT_BYTES ((CFE_EVS_MAX_MESSAGE_LENGTH - (13 + 33)) / 5)
 
 ;; Determine the Packet IDs for the MM Load/Dump and Symbol Table file CVTs
 ;; CPU1 is the default
@@ -300,9 +306,9 @@ write ";**********************************************************************"
 wait 10
 
 close_data_center
-wait 75
+wait 60
 
-cfe_startup $CPU
+cfe_startup {hostCPU}
 wait 5
 
 write ";**********************************************************************"
@@ -319,7 +325,7 @@ write ";**********************************************************************"
 ut_setupevents "$SC", "$CPU", "CFE_ES", CFE_ES_START_INF_EID, "INFO", 1
 ut_setupevents "$SC", "$CPU", {MMAppName}, MM_INIT_INF_EID, "INFO", 2
 
-s load_start_app (MMAppName,"$CPU","MM_AppMain")
+s load_start_app (MMAppName,hostCPU,"MM_AppMain")
 
 ; Wait for app startup events
 ut_tlmwait  $SC_$CPU_find_event[2].num_found_messages, 1
@@ -354,7 +360,7 @@ write ";**********************************************************************"
 ut_setupevents "$SC", "$CPU", "CFE_ES", CFE_ES_START_INF_EID, "INFO", 1
 ut_setupevents "$SC", "$CPU", "TST_MM", TST_MM_INIT_INF_EID, "INFO", 2
 
-s load_start_app ("TST_MM","$CPU","TST_MM_AppMain")
+s load_start_app ("TST_MM",hostCPU,"TST_MM_AppMain")
 
 ; Wait for app startup events
 ut_tlmwait  $SC_$CPU_find_event[2].num_found_messages, 1
@@ -476,7 +482,7 @@ if ($SC_$CPU_find_event[2].num_found_messages = 1) then
 else
   write "<*> Requirement 1013 could not be tested since Symbol Operations are supported on this platform."
   ;; Download the file
-  s ftp_file (ramDir,"symbolFile.dat","symbolFile.dat","$CPU","G")
+  s ftp_file (ramDir,"symbolFile.dat","symbolFile.dat",hostCPU,"G")
   wait 10
 
   FILE_TO_CVT %name("symbolFile.dat") %name(symTabPktID)
@@ -846,7 +852,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 
 ;; Send the Dump command and transfer the file to ground
-s get_mm_file_to_cvt(ramDir,"mm_st2_8_dump.dat","$CPU",appPktID,"RAM",dataToSend,"validRAM",0)
+s get_mm_file_to_cvt(ramDir,"mm_st2_8_dump.dat",hostCPU,appPktID,"RAM",dataToSend,"validRAM",0)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -869,7 +875,7 @@ if (UT_TW_Status = UT_Success) then
   write "<*> Passed (1009) - Expected Event Msg ",MM_DMP_MEM_FILE_INF_EID," rcv'd."
   ut_setrequirements MM_1009, "P"
   ;; Delete the onboard file
-  s ftp_file (ramDir,"na","mm_ram3_2_dump.dat","$CPU","R")
+  s ftp_file (ramDir,"na","mm_ram3_2_dump.dat",hostCPU,"R")
 else
   write "<!> Failed (1009) - Event message ", $SC_$CPU_evs_eventid," rcv'd. Expected Event Msg ",MM_DMP_MEM_FILE_INF_EID,"."
   ut_setrequirements MM_1009, "F"
@@ -1323,7 +1329,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 
 ;; Send the Dump command and transfer the file to ground
-s get_mm_file_to_cvt(ramDir,"mm_st2_15_dump.dat","$CPU",appPktID,"EEPROM",dataToSend,"validEEPROM",0)
+s get_mm_file_to_cvt(ramDir,"mm_st2_15_dump.dat",hostCPU,appPktID,"EEPROM",dataToSend,"validEEPROM",0)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -1346,7 +1352,7 @@ if (UT_TW_Status = UT_Success) then
   write "<*> Passed (1009) - Expected Event Msg ",MM_DMP_MEM_FILE_INF_EID," rcv'd."
   ut_setrequirements MM_1009, "P"
   ;; Delete the onboard file
-  s ftp_file (ramDir,"na","mm_ram3_2_dump.dat","$CPU","R")
+  s ftp_file (ramDir,"na","mm_ram3_2_dump.dat",hostCPU,"R")
 else
   write "<!> Failed (1009) - Event message ", $SC_$CPU_evs_eventid," rcv'd. Expected Event Msg ",MM_DMP_MEM_FILE_INF_EID,"."
   ut_setrequirements MM_1009, "F"
@@ -1701,7 +1707,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_SYMNAME_ERR_EID, "ERROR", 1
 
 errCtr = $SC_$CPU_MM_CMDEC + 1 
 
-s get_mm_file_to_cvt(ramDir,"mm_st3_6_dump.dat","$CPU",appPktID,"RAM",dataToSend,"invalidRAMSymbol",0)
+s get_mm_file_to_cvt(ramDir,"mm_st3_6_dump.dat",hostCPU,appPktID,"RAM",dataToSend,"invalidRAMSymbol",0)
 
 ut_tlmwait  $SC_$CPU_MM_CMDEC, {errCtr}
 if (UT_TW_Status = UT_Success) then
@@ -1916,7 +1922,7 @@ write ";**********************************************************************"
 ut_setupevents "$SC", "$CPU", {MMAppName}, MM_SYMNAME_ERR_EID, "ERROR", 1
 
 errCtr = $SC_$CPU_MM_CMDEC + 1 
-s get_mm_file_to_cvt(ramDir,"mm_st3_12_dump.dat","$CPU",appPktID,"EEPROM",dataToSend,"invalidEEPROMSymbol",0)
+s get_mm_file_to_cvt(ramDir,"mm_st3_12_dump.dat",hostCPU,appPktID,"EEPROM",dataToSend,"invalidEEPROMSymbol",0)
 
 ut_tlmwait  $SC_$CPU_MM_CMDEC, {errCtr}
 if (UT_TW_Status = UT_Success) then
@@ -2205,9 +2211,9 @@ write ";**********************************************************************"
 wait 10
 
 close_data_center
-wait 75
-                                                                                
-cfe_startup $CPU
+wait 60
+
+cfe_startup {hostCPU}
 wait 5
 
 ;; Remove the display pages from the screen

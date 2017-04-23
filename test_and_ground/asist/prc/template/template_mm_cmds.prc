@@ -70,6 +70,10 @@ PROC $sc_$cpu_mm_cmds
 ;	07/25/11	Walt Moleski	Modified Step 2.6 since the Dump Symbol
 ;					Table command is now implemented.
 ;	04/16/15	Walt Moleski	Updated the requirements for MM 2.4.0.0
+;       11/14/16        Walt Moleski    Updated for MM 2.4.1.0 using CPU1 for
+;                                       commanding and added a hostCPU variable
+;                                       for the utility procs to connect to the
+;                                       proper host IP address.
 ;
 ;  Arguments
 ;	None.
@@ -138,6 +142,7 @@ LOCAL rawcmd
 LOCAL stream1,symTabPktID
 local MMAppName = "MM"
 local ramDir = "RAM:0"
+local hostCPU = "$CPU"
 
 write ";*********************************************************************"
 write ";  Step 1.0:  Initialize the CPU for this test. "
@@ -148,9 +153,9 @@ write ";********************************************************************"
 wait 10
 
 close_data_center
-wait 75
+wait 60
                                                                                 
-cfe_startup $CPU
+cfe_startup {hostCPU}
 wait 5
 
 write ";**********************************************************************"
@@ -167,7 +172,7 @@ write ";********************************************************************"
 ut_setupevents "$SC", "$CPU", "CFE_ES", CFE_ES_START_INF_EID, "INFO", 1
 ut_setupevents "$SC", "$CPU", {MMAppName}, MM_INIT_INF_EID, "INFO", 2
 
-s load_start_app (MMAppName,"$CPU","MM_AppMain")
+s load_start_app (MMAppName,hostCPU,"MM_AppMain")
 
 ; Wait for app startup events
 ut_tlmwait  $SC_$CPU_find_event[2].num_found_messages, 1
@@ -205,7 +210,7 @@ write ";**********************************************************************"
 ut_setupevents "$SC", "$CPU", "CFE_ES", CFE_ES_START_INF_EID, "INFO", 1
 ut_setupevents "$SC", "$CPU", "TST_MM", TST_MM_INIT_INF_EID, "INFO", 2
                                                                                 
-s load_start_app ("TST_MM","$CPU","TST_MM_AppMain")
+s load_start_app ("TST_MM",hostCPU,"TST_MM_AppMain")
                                                                                 
 ; Wait for app startup events
 ut_tlmwait  $SC_$CPU_find_event[2].num_found_messages, 1
@@ -561,7 +566,7 @@ if ($SC_$CPU_find_event[2].num_found_messages = 1) then
 else
   write "<*> Requirement 1013 could not be tested since Symbol Operations are supported on this platform."
   ;; Download the file
-  s ftp_file (ramDir,"mm_symbol_tbl.dat","mm_symbol_tbl.dat","$CPU","G")
+  s ftp_file (ramDir,"mm_symbol_tbl.dat","mm_symbol_tbl.dat",hostCPU,"G")
   wait 10
 
   FILE_TO_CVT %name("mm_symbol_tbl.dat") %name(symTabPktID)
@@ -596,9 +601,9 @@ write ";*********************************************************************"
 wait 10
 
 close_data_center
-wait 75
+wait 60
 
-cfe_startup $CPU
+cfe_startup {hostCPU}
 wait 5
 
 ;; Remove the display pages from the screen

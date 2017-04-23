@@ -1,6 +1,6 @@
 /************************************************************************
 ** File:
-**   $Id: mm_app.c 1.17 2015/04/14 15:29:04EDT lwalling Exp  $
+**   $Id: mm_app.c 1.3 2016/10/30 00:48:50EDT mdeschu Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -17,6 +17,13 @@
 **   operations and read and write accesses to memory mapped hardware.
 **
 **   $Log: mm_app.c  $
+**   Revision 1.3 2016/10/30 00:48:50EDT mdeschu 
+**   Use c-style casts to clean up compiler warnings in calls to CFE_EVS_SendEvent
+**   Revision 1.2 2015/12/29 15:22:45EST czogby 
+**   Move function prototypes from .c files into .h files
+**   Revision 1.1 2015/07/28 12:21:35EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/src/project.pj
 **   Revision 1.17 2015/04/14 15:29:04EDT lwalling 
 **   Removed unnecessary backslash characters from string format definitions
 **   Revision 1.16 2015/03/30 17:34:00EDT lwalling 
@@ -70,177 +77,6 @@
 ** MM global data
 *************************************************************************/
 MM_AppData_t MM_AppData;
-
-/************************************************************************
-** Local function prototypes
-*************************************************************************/
-/************************************************************************/
-/** \brief Initialize the memory manager CFS application
-**  
-**  \par Description
-**       Memory manager application initialization routine. This 
-**       function performs all the required startup steps to 
-**       get the application registered with the cFE services so
-**       it can begin to receive command messages. 
-**
-**  \par Assumptions, External Events, and Notes:
-**       None
-**       
-**  \returns
-**  \retcode #CFE_SUCCESS  \retdesc \copydoc CFE_SUCCESS \endcode
-**  \retstmt Return codes from #CFE_EVS_Register         \endcode
-**  \retstmt Return codes from #CFE_SB_CreatePipe        \endcode
-**  \retstmt Return codes from #CFE_SB_Subscribe         \endcode
-**  \endreturns
-**
-*************************************************************************/
-int32 MM_AppInit(void); 
-
-/************************************************************************/
-/** \brief Process a command pipe message
-**  
-**  \par Description
-**       Processes a single software bus command pipe message. Checks
-**       the message and command IDs and calls the appropriate routine
-**       to handle the command.
-**
-**  \par Assumptions, External Events, and Notes:
-**       None
-**       
-**  \param [in]   msg   A #CFE_SB_MsgPtr_t pointer that
-**                      references the software bus message 
-**
-**  \sa #CFE_SB_RcvMsg
-**
-*************************************************************************/
-void MM_AppPipe(CFE_SB_MsgPtr_t msg);
- 
-/************************************************************************/
-/** \brief Process housekeeping request
-**  
-**  \par Description
-**       Processes an on-board housekeeping request message.
-**
-**  \par Assumptions, External Events, and Notes:
-**       This command does not affect the command execution counter
-**       
-**  \param [in]   msg   A #CFE_SB_MsgPtr_t pointer that
-**                      references the software bus message 
-**
-*************************************************************************/
-void MM_HousekeepingCmd(CFE_SB_MsgPtr_t msg);
- 
-/************************************************************************/
-/** \brief Process noop command
-**  
-**  \par Description
-**       Processes a noop ground command.
-**
-**  \par Assumptions, External Events, and Notes:
-**       None
-**       
-**  \param [in]   msg   A #CFE_SB_MsgPtr_t pointer that
-**                      references the software bus message 
-**
-**  \sa #MM_NOOP_CC
-**
-*************************************************************************/
-void MM_NoopCmd(CFE_SB_MsgPtr_t msg);
-
-/************************************************************************/
-/** \brief Process reset counters command
-**  
-**  \par Description
-**       Processes a reset counters ground command which will reset
-**       the memory manager commmand error and command execution counters
-**       to zero.
-**
-**  \par Assumptions, External Events, and Notes:
-**       None
-**       
-**  \param [in]   MessagePtr   A #CFE_SB_MsgPtr_t pointer that
-**                             references the software bus message 
-**
-**  \sa #MM_RESET_CC
-**
-*************************************************************************/
-void MM_ResetCmd(CFE_SB_MsgPtr_t MessagePtr);
-
-/************************************************************************/
-/** \brief Process lookup symbol command
-**  
-**  \par Description
-**       Processes a lookup symbol ground command which takes a 
-**       symbol name and tries to resolve it to an address using the
-**       #OS_SymbolLookup OSAL function.
-**
-**  \par Assumptions, External Events, and Notes:
-**       None
-**       
-**  \param [in]   msg          A #CFE_SB_MsgPtr_t pointer that
-**                             references the software bus message 
-**
-**  \sa #MM_LOOKUP_SYM_CC
-**
-*************************************************************************/
-void MM_LookupSymbolCmd(CFE_SB_MsgPtr_t msg);
-
-/************************************************************************/
-/** \brief Dump symbol table to file command
-**  
-**  \par Description
-**       Processes a dump symbol table to file ground command which calls  
-**       the #OS_SymbolTableDump OSAL function using the specified dump
-**       file name.
-**
-**  \par Assumptions, External Events, and Notes:
-**       None
-**       
-**  \param [in]   msg          A #CFE_SB_MsgPtr_t pointer that
-**                             references the software bus message 
-**
-**  \sa #MM_SYMTBL_TO_FILE_CC
-**
-*************************************************************************/
-void MM_SymTblToFileCmd(CFE_SB_MsgPtr_t msg);
-
-/************************************************************************/
-/** \brief Write-enable EEPROM command
-**  
-**  \par Description
-**       Processes a EEPROM write enable ground command which calls  
-**       the #CFE_PSP_EepromWriteEnable cFE function using the specified
-**       bank number.
-**
-**  \par Assumptions, External Events, and Notes:
-**       None
-**       
-**  \param [in]   msg          A #CFE_SB_MsgPtr_t pointer that
-**                             references the software bus message 
-**
-**  \sa #MM_ENABLE_EEPROM_WRITE_CC
-**
-*************************************************************************/
-void MM_EepromWriteEnaCmd(CFE_SB_MsgPtr_t msg);
-
-/************************************************************************/
-/** \brief Write-disable EEPROM command
-**  
-**  \par Description
-**       Processes a EEPROM write disable ground command which calls  
-**       the #CFE_PSP_EepromWriteDisable cFE function using the specified
-**       bank number.
-**
-**  \par Assumptions, External Events, and Notes:
-**       None
-**       
-**  \param [in]   msg          A #CFE_SB_MsgPtr_t pointer that
-**                             references the software bus message 
-**
-**  \sa #MM_DISABLE_EEPROM_WRITE_CC
-**
-*************************************************************************/
-void MM_EepromWriteDisCmd(CFE_SB_MsgPtr_t msg);
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                                                 */
@@ -304,7 +140,7 @@ void MM_AppMain(void)
          ** Exit on pipe read error
          */
          CFE_EVS_SendEvent(MM_PIPE_ERR_EID, CFE_EVS_ERROR,
-                           "SB Pipe Read Error, App will exit. RC = 0x%08X", Status);         
+                           "SB Pipe Read Error, App will exit. RC = 0x%08X", (unsigned int)Status);         
           
          MM_AppData.RunStatus = CFE_ES_APP_ERROR;
           
@@ -365,7 +201,7 @@ int32 MM_AppInit(void)
    
    if (Status != CFE_SUCCESS)
    {
-      CFE_ES_WriteToSysLog("MM App: Error Registering For Event Services, RC = 0x%08X\n", Status);
+      CFE_ES_WriteToSysLog("MM App: Error Registering For Event Services, RC = 0x%08X\n", (unsigned int)Status);
       return (Status);
    }
     
@@ -380,7 +216,7 @@ int32 MM_AppInit(void)
    Status = CFE_SB_CreatePipe(&MM_AppData.CmdPipe, MM_AppData.PipeDepth, MM_AppData.PipeName);
    if (Status != CFE_SUCCESS)
    {
-      CFE_ES_WriteToSysLog("MM App: Error Creating SB Pipe, RC = 0x%08X\n", Status);
+      CFE_ES_WriteToSysLog("MM App: Error Creating SB Pipe, RC = 0x%08X\n", (unsigned int)Status);
       return (Status);
    }    
 
@@ -390,7 +226,7 @@ int32 MM_AppInit(void)
    Status = CFE_SB_Subscribe(MM_SEND_HK_MID, MM_AppData.CmdPipe);
    if (Status != CFE_SUCCESS)
    {
-      CFE_ES_WriteToSysLog("MM App: Error Subscribing to HK Request, RC = 0x%08X\n", Status);
+      CFE_ES_WriteToSysLog("MM App: Error Subscribing to HK Request, RC = 0x%08X\n", (unsigned int)Status);
       return (Status);
    }    
 
@@ -400,7 +236,7 @@ int32 MM_AppInit(void)
    Status = CFE_SB_Subscribe(MM_CMD_MID, MM_AppData.CmdPipe);
    if (Status != CFE_SUCCESS)
    {
-      CFE_ES_WriteToSysLog("MM App: Error Subscribing to MM Command, RC = 0x%08X\n", Status);
+      CFE_ES_WriteToSysLog("MM App: Error Subscribing to MM Command, RC = 0x%08X\n", (unsigned int)Status);
       return (Status);
    }    
 
@@ -684,7 +520,7 @@ void MM_LookupSymbolCmd(CFE_SB_MsgPtr_t msg)
              
              CFE_EVS_SendEvent(MM_SYM_LOOKUP_INF_EID, CFE_EVS_INFORMATION,
                                "Symbol Lookup Command: Name = '%s' Addr = 0x%08X",
-                               CmdPtr->SymName, ResolvedAddr);
+                               CmdPtr->SymName, (unsigned int)ResolvedAddr);
           }
          else
          {
@@ -762,7 +598,7 @@ void MM_SymTblToFileCmd(CFE_SB_MsgPtr_t msg)
                  MM_AppData.ErrCounter++;
                  CFE_EVS_SendEvent(MM_SYMTBL_TO_FILE_FAIL_ERR_EID, CFE_EVS_ERROR,
                                    "Error dumping symbol table, OS_Status= 0x%X, File='%s'", 
-                                   OS_Status, CmdPtr->FileName);   
+                                   (unsigned int)OS_Status, CmdPtr->FileName);   
              }
          }
          else
@@ -812,14 +648,14 @@ void MM_EepromWriteEnaCmd(CFE_SB_MsgPtr_t msg)
              
              CFE_EVS_SendEvent(MM_EEPROM_WRITE_ENA_INF_EID, CFE_EVS_INFORMATION,
                                "EEPROM bank %d write enabled, cFE_Status= 0x%X",
-                               CmdPtr->Bank, cFE_Status);
+                               (int)CmdPtr->Bank, (unsigned int)cFE_Status);
           }
          else
          {
              MM_AppData.ErrCounter++;
              CFE_EVS_SendEvent(MM_EEPROM_WRITE_ENA_ERR_EID, CFE_EVS_ERROR,
                                "Error requesting EEPROM bank %d write enable, cFE_Status= 0x%X", 
-                               CmdPtr->Bank, cFE_Status);   
+                               (int)CmdPtr->Bank, (unsigned int)cFE_Status);   
          }
       
    } /* end MM_VerifyCmdLength if */
@@ -859,14 +695,14 @@ void MM_EepromWriteDisCmd(CFE_SB_MsgPtr_t msg)
              
              CFE_EVS_SendEvent(MM_EEPROM_WRITE_DIS_INF_EID, CFE_EVS_INFORMATION,
                                "EEPROM bank %d write disabled, cFE_Status= 0x%X",
-                               CmdPtr->Bank, cFE_Status);
+                               (int)CmdPtr->Bank, (unsigned int)cFE_Status);
           }
          else
          {
              MM_AppData.ErrCounter++;
              CFE_EVS_SendEvent(MM_EEPROM_WRITE_DIS_ERR_EID, CFE_EVS_ERROR,
                                "Error requesting EEPROM bank %d write disable, cFE_Status= 0x%X", 
-                               CmdPtr->Bank, cFE_Status);   
+                               (int)CmdPtr->Bank, (unsigned int)cFE_Status);
          }
       
    } /* end MM_VerifyCmdLength if */

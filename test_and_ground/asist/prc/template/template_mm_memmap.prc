@@ -1,11 +1,11 @@
-PROC $sc_$cpu_mm_memmap
+proc $sc_$cpu_mm_memmap
 ;*******************************************************************************
 ;  Test Name:  mm_memmap
 ;  Test Level: Build Verification
 ;  Test Type:  Functional
 ;
 ;  Test Description
-;	This test verifies that the CFS Memory Manager (MM) Memnory Mapped I/O
+;	This test verifies that the CFS Memory Manager (MM) Memory Mapped I/O
 ;	commands function properly and that the MM application handles 
 ;	anomalies appropriately.
 ;
@@ -82,7 +82,7 @@ PROC $sc_$cpu_mm_memmap
 ;			g. Filename used in last command
 ;                       h. Data Value for last command (may be fill pattern or
 ;                          peek/poke value)
-;MM9000	Upon initialization of the MM Application, MM shall initialize
+;    MM9000	Upon initialization of the MM Application, MM shall initialize
 ;		the following data to zero::
 ;			a. Valid Command Counter
 ;			b. Command Rejected Counter
@@ -113,6 +113,10 @@ PROC $sc_$cpu_mm_memmap
 ;					ram disk. Also, updated the commands to
 ;					use the MemType union defined in rdl
 ;	04/16/15	Walt Moleski	Updated the requirements for MM 2.4.0.0
+;       11/14/16        Walt Moleski    Updated for MM 2.4.1.0 using CPU1 for
+;                                       commanding and added a hostCPU variable
+;                                       for the utility procs to connect to the
+;                                       proper host IP address.
 ;
 ;  Arguments
 ;	None.
@@ -222,10 +226,12 @@ LOCAL errCtr
 LOCAL MMAppName = "MM"
 LOCAL ramDir = "RAM:0"
 
-;; This define is calculated in the mm_dump.c file and could not be used
+local hostCPU = "$CPU"
+
+;; This define is calculated in the mm_dump.h file and could not be used
 ;; directly from the MM source. Thus, if this size changes, this calculation
 ;; must be changed here
-#define MM_MAX_DUMP_INEVENT_BYTES ((CFE_EVS_MAX_MESSAGE_LENGTH - (13 + 25)) / 5)
+#define MM_MAX_DUMP_INEVENT_BYTES ((CFE_EVS_MAX_MESSAGE_LENGTH - (13 + 33)) / 5)
 
 ;; Determine the Packet IDs for the MM Load/Dump file CVT
 local varPktID
@@ -256,9 +262,9 @@ write ";**********************************************************************"
 wait 10
 
 close_data_center
-wait 75
+wait 60
                                                                                 
-cfe_startup $CPU
+cfe_startup {hostCPU}
 wait 5
 
 write ";**********************************************************************"
@@ -274,7 +280,7 @@ write ";**********************************************************************"
 ut_setupevents "$SC", "$CPU", "CFE_ES", CFE_ES_START_INF_EID, "INFO", 1
 ut_setupevents "$SC", "$CPU", {MMAppName}, MM_INIT_INF_EID, "INFO", 2
 
-s load_start_app (MMAppName,"$CPU","MM_AppMain")
+s load_start_app (MMAppName,hostCPU,"MM_AppMain")
 
 ; Wait for app startup events
 ut_tlmwait  $SC_$CPU_find_event[2].num_found_messages, 1
@@ -309,7 +315,7 @@ write ";**********************************************************************"
 ut_setupevents "$SC", "$CPU", "CFE_ES", CFE_ES_START_INF_EID, "INFO", 1
 ut_setupevents "$SC", "$CPU", "TST_MM", TST_MM_INIT_INF_EID, "INFO", 2
 
-s load_start_app ("TST_MM","$CPU","TST_MM_AppMain")
+s load_start_app ("TST_MM",hostCPU,"TST_MM_AppMain")
 
 ; Wait for app startup events
 ut_tlmwait  $SC_$CPU_find_event[2].num_found_messages, 1
@@ -1543,8 +1549,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm_mm8_32_dump.dat", "$CPU", appPktID, MM_MEM8, dataToSend, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm_mm8_32_dump.dat","$CPU",appPktID,"MEM8",dataToSend,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_mm8_32_dump.dat",hostCPU,appPktID,"MEM8",dataToSend,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -1586,7 +1591,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","mm_mm8_32_dump.dat","$CPU","R")
+s ftp_file (ramDir,"na","mm_mm8_32_dump.dat",hostCPU,"R")
 
 wait 5
 
@@ -1630,7 +1635,7 @@ wait 5
 
 write ";**********************************************************************"
 write ";  Step 3.4: Send a read command with the bytes to be read equal to the"
-write ";  maximum event message size. "
+write ";  maximum event message size that is MEM16 aligned. "
 write ";**********************************************************************"
 ;; Setup for the Event message
 ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DUMP_INEVENT_INF_EID, "INFO", 1
@@ -1639,7 +1644,9 @@ validAddr = $SC_$CPU_TST_MM_RAMAddress
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the command
-/$SC_$CPU_MM_DumpInEvent MEM16 DataSize=MM_MAX_DUMP_INEVENT_BYTES SymName="" Offset=validAddr
+;; Prior to 2.4.1.0, MM_MAX_DUMP_INEVENT_BYTES was MEM16 aligned
+;;/$SC_$CPU_MM_DumpInEvent MEM16 DataSize=MM_MAX_DUMP_INEVENT_BYTES SymName="" Offset=validAddr
+/$SC_$CPU_MM_DumpInEvent MEM16 DataSize=14 SymName="" Offset=validAddr
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -1929,8 +1936,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm_mm16_42_dump.dat", "$CPU", appPktID, MM_MEM16, dataToSend, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm_mm16_42_dump.dat","$CPU",appPktID,"MEM16",dataToSend,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_mm16_42_dump.dat",hostCPU,appPktID,"MEM16",dataToSend,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -1972,7 +1978,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","mm_mm16_42_dump.dat","$CPU","R")
+s ftp_file (ramDir,"na","mm_mm16_42_dump.dat",hostCPU,"R")
 
 wait 5
 
@@ -2010,14 +2016,14 @@ hdrVar = varPktID & "MEMTYPE"
 write "Step 4.3: ", hdrVar, " = ", {hdrVar}
 
 ;; Create the Load File
-s create_mm_file_from_cvt("$CPU",varPktID,appPktID,hexAppID,"MEM16 Load File with an invalid CRC","badmem16crcload.dat")
+s create_mm_file_from_cvt(hostCPU,varPktID,appPktID,hexAppID,"MEM16 Load File with an invalid CRC","badmem16crcload.dat")
 
 ;; Setup for the Event message
 ut_setupevents "$SC", "$CPU", {MMAppName}, MM_LOAD_FILE_CRC_ERR_EID, "ERROR", 1
 
 errCtr = $SC_$CPU_MM_CMDEC + 1
 ;; Transfer the file to s/c and issue the MM LoadFile command
-s load_memory ("badmem16crcload.dat", "$CPU")
+s load_memory ("badmem16crcload.dat", hostCPU)
 
 ut_tlmwait  $SC_$CPU_MM_CMDEC, {errCtr}
 if (UT_TW_Status = UT_Success) then
@@ -2041,7 +2047,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","badmem16crcload.dat","$CPU","R")
+s ftp_file (ramDir,"na","badmem16crcload.dat",hostCPU,"R")
 
 wait 5
 
@@ -2089,7 +2095,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","overmaxload.dat","$CPU","R")
+s ftp_file (ramDir,"na","overmaxload.dat",hostCPU,"R")
 
 wait 5
 
@@ -2175,10 +2181,10 @@ write ";  Step 4.5.3: Download the load file in order to use it again later "
 write ";  and delete the onboard file. "
 write ";**********************************************************************";
 ; Get the onboard file to the ground
-s ftp_file (ramDir,"maxdatamm16load.dat","maxdatamm16load.dat","$CPU","G")
+s ftp_file (ramDir,"maxdatamm16load.dat","maxdatamm16load.dat",hostCPU,"G")
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","maxdatamm16load.dat","$CPU","R")
+s ftp_file (ramDir,"na","maxdatamm16load.dat",hostCPU,"R")
 
 wait 5
 
@@ -2310,7 +2316,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_OS_MEMVALIDATE_ERR_EID, "ERROR", 1
 
 errCtr = $SC_$CPU_MM_CMDEC + 1
 ;; Transfer the file to s/c and issue the MM LoadFile command
-s load_memory ("badmm16addrload.dat", "$CPU")
+s load_memory ("badmm16addrload.dat", hostCPU)
 
 ut_tlmwait  $SC_$CPU_MM_CMDEC, {errCtr}
 if (UT_TW_Status = UT_Success) then
@@ -2366,7 +2372,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","toomuchdata.dat","$CPU","R")
+s ftp_file (ramDir,"na","toomuchdata.dat",hostCPU,"R")
 
 wait 5
 
@@ -2401,7 +2407,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","notenoughdata.dat","$CPU","R")
+s ftp_file (ramDir,"na","notenoughdata.dat",hostCPU,"R")
 
 wait 5
 
@@ -2447,8 +2453,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm_mm8_411_dump.dat", "$CPU", appPktID, MM_MEM8, dataToSend, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm_mm8_411_dump.dat","$CPU",appPktID,"MEM8",dataToSend,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_mm8_411_dump.dat",hostCPU,appPktID,"MEM8",dataToSend,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -2472,7 +2477,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","mm_mm8_411_dump.dat","$CPU","R")
+s ftp_file (ramDir,"na","mm_mm8_411_dump.dat",hostCPU,"R")
 
 wait 5
 
@@ -2510,14 +2515,14 @@ hdrVar = varPktID & "MEMTYPE"
 write "Step 4.12: ", hdrVar, " = ", {hdrVar}
 
 ;; Create the Load File
-s create_mm_file_from_cvt("$CPU",varPktID,appPktID,hexAppID,"MEM8 Load File with an invalid CRC","badmem8crcload.dat")
+s create_mm_file_from_cvt(hostCPU,varPktID,appPktID,hexAppID,"MEM8 Load File with an invalid CRC","badmem8crcload.dat")
 
 ;; Setup for the Event message
 ut_setupevents "$SC", "$CPU", {MMAppName}, MM_LOAD_FILE_CRC_ERR_EID, "ERROR", 1
 
 errCtr = $SC_$CPU_MM_CMDEC + 1
 ;; Transfer the file to s/c and issue the MM LoadFile command
-s load_memory ("badmem8crcload.dat", "$CPU")
+s load_memory ("badmem8crcload.dat", hostCPU)
 
 ut_tlmwait  $SC_$CPU_MM_CMDEC, {errCtr}
 if (UT_TW_Status = UT_Success) then
@@ -2541,7 +2546,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","badmem8crcload.dat","$CPU","R")
+s ftp_file (ramDir,"na","badmem8crcload.dat",hostCPU,"R")
 
 wait 5
 
@@ -2589,7 +2594,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","overmaxload.dat","$CPU","R")
+s ftp_file (ramDir,"na","overmaxload.dat",hostCPU,"R")
 
 wait 5
 
@@ -2675,10 +2680,10 @@ write ";  Step 4.14.3: Download the load file in order to use it again later "
 write ";  and delete the onboard file. "
 write ";**********************************************************************";
 ; Get the onboard file
-s ftp_file (ramDir,"maxdatamm8load.dat","maxdatamm8load.dat","$CPU","G")
+s ftp_file (ramDir,"maxdatamm8load.dat","maxdatamm8load.dat",hostCPU,"G")
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","maxdatamm8load.dat","$CPU","R")
+s ftp_file (ramDir,"na","maxdatamm8load.dat",hostCPU,"R")
 
 wait 5
 
@@ -2805,7 +2810,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","toomuchdata.dat","$CPU","R")
+s ftp_file (ramDir,"na","toomuchdata.dat",hostCPU,"R")
 
 wait 5
 
@@ -2840,7 +2845,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","notenoughdata.dat","$CPU","R")
+s ftp_file (ramDir,"na","notenoughdata.dat",hostCPU,"R")
 
 wait 5
 
@@ -2928,8 +2933,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm_m32_420_dump.dat", "$CPU", appPktID, MM_MEM32, dataToSend, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm_m32_420_dump.dat","$CPU",appPktID,"MEM32",dataToSend,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_m32_420_dump.dat",hostCPU,appPktID,"MEM32",dataToSend,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -2971,7 +2975,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","mm_m32_420_dump.dat","$CPU","R")
+s ftp_file (ramDir,"na","mm_m32_420_dump.dat",hostCPU,"R")
 
 wait 5
 
@@ -3009,14 +3013,14 @@ hdrVar = varPktID & "MEMTYPE"
 write "Step 4.21: ", hdrVar, " = ", {hdrVar}
 
 ;; Create the Load File
-s create_mm_file_from_cvt("$CPU",varPktID,appPktID,hexAppID,"MEM32 Load File with an invalid CRC","badmem32crcload.dat")
+s create_mm_file_from_cvt(hostCPU,varPktID,appPktID,hexAppID,"MEM32 Load File with an invalid CRC","badmem32crcload.dat")
 
 ;; Setup for the Event message
 ut_setupevents "$SC", "$CPU", {MMAppName}, MM_LOAD_FILE_CRC_ERR_EID, "ERROR", 1
 
 errCtr = $SC_$CPU_MM_CMDEC + 1
 ;; Transfer the file to s/c and issue the MM LoadFile command
-s load_memory ("badmem32crcload.dat", "$CPU")
+s load_memory ("badmem32crcload.dat", hostCPU)
 
 ut_tlmwait  $SC_$CPU_MM_CMDEC, {errCtr}
 if (UT_TW_Status = UT_Success) then
@@ -3040,7 +3044,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","badmem32crcload.dat","$CPU","R")
+s ftp_file (ramDir,"na","badmem32crcload.dat",hostCPU,"R")
 
 wait 5
 
@@ -3088,7 +3092,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","overmaxload.dat","$CPU","R")
+s ftp_file (ramDir,"na","overmaxload.dat",hostCPU,"R")
 
 wait 5
 
@@ -3174,10 +3178,10 @@ write ";  Step 4.23.3: Download the load file in order to use it again later "
 write ";  and delete the onboard file. "
 write ";**********************************************************************";
 ; Get the onboard file
-s ftp_file (ramDir,"maxdatamm32load.dat","maxdatamm32load.dat","$CPU","G")
+s ftp_file (ramDir,"maxdatamm32load.dat","maxdatamm32load.dat",hostCPU,"G")
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","maxdatamm32load.dat","$CPU","R")
+s ftp_file (ramDir,"na","maxdatamm32load.dat",hostCPU,"R")
 
 wait 5
 
@@ -3364,7 +3368,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","toomuchdata.dat","$CPU","R")
+s ftp_file (ramDir,"na","toomuchdata.dat",hostCPU,"R")
 
 wait 5
 
@@ -3399,7 +3403,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","notenoughdata.dat","$CPU","R")
+s ftp_file (ramDir,"na","notenoughdata.dat",hostCPU,"R")
 
 wait 5
 
@@ -3594,8 +3598,7 @@ validAddr = $SC_$CPU_TST_MM_RAMAddress
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm_m16_432_dump.dat", "$CPU", appPktID, MM_MEM16, MM_MAX_DUMP_FILE_DATA_MEM16, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm_m16_432_dump.dat","$CPU",appPktID,"MEM16",MM_MAX_DUMP_FILE_DATA_MEM16,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_m16_432_dump.dat",hostCPU,appPktID,"MEM16",MM_MAX_DUMP_FILE_DATA_MEM16,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -3619,7 +3622,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","mm_m16_432_dump.dat","$CPU","R")
+s ftp_file (ramDir,"na","mm_m16_432_dump.dat",hostCPU,"R")
 
 wait 5
 
@@ -3635,8 +3638,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_ALIGN16_ERR_EID, "ERROR", 1
 
 errCtr = $SC_$CPU_MM_CMDEC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm16_4331_dump.dat", "$CPU", appPktID, MM_MEM16, 1, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm16_4331_dump.dat","$CPU",appPktID,"MEM16",1,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm16_4331_dump.dat",hostCPU,appPktID,"MEM16",1,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDEC, {errCtr}
 if (UT_TW_Status = UT_Success) then
@@ -3670,8 +3672,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm16_4332_dump.dat", "$CPU", appPktID, MM_MEM16, 2, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm16_4332_dump.dat","$CPU",appPktID,"MEM16",2,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm16_4332_dump.dat",hostCPU,appPktID,"MEM16",2,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -3765,7 +3766,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","mm_m8_435_dump.dat","$CPU","R")
+s ftp_file (ramDir,"na","mm_m8_435_dump.dat",hostCPU,"R")
 
 wait 5
 
@@ -3778,8 +3779,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm_m8_436_dump.dat", "$CPU", appPktID, MM_MEM8, MM_MAX_DUMP_FILE_DATA_MEM8, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm_m8_436_dump.dat","$CPU",appPktID,"MEM8",MM_MAX_DUMP_FILE_DATA_MEM8,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_m8_436_dump.dat",hostCPU,appPktID,"MEM8",MM_MAX_DUMP_FILE_DATA_MEM8,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -3803,7 +3803,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","mm_m8_436_dump.dat","$CPU","R")
+s ftp_file (ramDir,"na","mm_m8_436_dump.dat",hostCPU,"R")
 
 wait 5
 
@@ -3816,8 +3816,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm_m8_437_dump.dat", "$CPU", appPktID, MM_MEM8, 1, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm_m8_437_dump.dat","$CPU",appPktID,"MEM8",1,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_m8_437_dump.dat",hostCPU,appPktID,"MEM8",1,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -3921,8 +3920,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm_m32_440_dump.dat", "$CPU", appPktID, MM_MEM32, MM_MAX_DUMP_FILE_DATA_MEM32, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm_m32_440_dump.dat","$CPU",appPktID,"MEM32",MM_MAX_DUMP_FILE_DATA_MEM32,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_m32_440_dump.dat",hostCPU,appPktID,"MEM32",MM_MAX_DUMP_FILE_DATA_MEM32,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -3946,7 +3944,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","mm_m32_440_dump.dat","$CPU","R")
+s ftp_file (ramDir,"na","mm_m32_440_dump.dat",hostCPU,"R")
 
 wait 5
 
@@ -3962,8 +3960,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_ALIGN32_ERR_EID, "ERROR", 1
 
 errCtr = $SC_$CPU_MM_CMDEC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm32_4411_dump.dat", "$CPU", appPktID, MM_MEM32, 1, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm32_4411_dump.dat","$CPU",appPktID,"MEM32",1,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm32_4411_dump.dat",hostCPU,appPktID,"MEM32",1,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDEC, {errCtr}
 if (UT_TW_Status = UT_Success) then
@@ -3997,8 +3994,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm32_4412_dump.dat", "$CPU", appPktID, MM_MEM32, 4, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm32_4412_dump.dat","$CPU",appPktID,"MEM32",4,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm32_4412_dump.dat",hostCPU,appPktID,"MEM32",4,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -4429,8 +4425,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm_mm8_55_dump.dat", "$CPU", appPktID, MM_MEM8, MM_MAX_FILL_DATA_MEM8, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm_mm8_55_dump.dat","$CPU",appPktID,"MEM8",MM_MAX_FILL_DATA_MEM8,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_mm8_55_dump.dat",hostCPU,appPktID,"MEM8",MM_MAX_FILL_DATA_MEM8,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -4454,7 +4449,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","mm_mm8_55_dump.dat","$CPU","R")
+s ftp_file (ramDir,"na","mm_mm8_55_dump.dat",hostCPU,"R")
 
 wait 5
 
@@ -4571,7 +4566,9 @@ validAddr = $SC_$CPU_TST_MM_RAMAddress
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the command
-/$SC_$CPU_MM_Fill MEM16 DataSize=MM_MAX_DUMP_INEVENT_BYTES Pattern=x'FFFFFFFF' SymName="" Offset=validAddr
+;; Prior to 2.4.1.0, MM_MAX_DUMP_INEVENT_BYTES was MEM16 aligned
+;;/$SC_$CPU_MM_Fill MEM16 DataSize=MM_MAX_DUMP_INEVENT_BYTES Pattern=x'FFFFFFFF' SymName="" Offset=validAddr
+/$SC_$CPU_MM_Fill MEM16 DataSize=14 Pattern=x'FFFFFFFF' SymName="" Offset=validAddr
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -4594,7 +4591,7 @@ if (UT_TW_Status = UT_Success) then
      ($SC_$CPU_MM_MemType = MM_MEM16) AND ;;
      ($SC_$CPU_MM_Address = validAddr) AND ;;
      ($SC_$CPU_MM_DataValue = x'FFFF') AND ;;
-     ($SC_$CPU_MM_BytesProc = MM_MAX_DUMP_INEVENT_BYTES) AND ;;
+     ($SC_$CPU_MM_BytesProc = 14) AND ;;
      ($SC_$CPU_MM_LastFile = "") THEN
     write "<*> Passed (8000) - Last Command HK items as expected."
     ut_setrequirements MM_8000, "P"
@@ -4624,7 +4621,9 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DUMP_INEVENT_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the command
-/$SC_$CPU_MM_DumpInEvent MEM16 DataSize=MM_MAX_DUMP_INEVENT_BYTES SymName="" Offset=validAddr
+;; Prior to 2.4.1.0, MM_MAX_DUMP_INEVENT_BYTES was MEM16 aligned
+;;/$SC_$CPU_MM_DumpInEvent MEM16 DataSize=MM_MAX_DUMP_INEVENT_BYTES SymName="" Offset=validAddr
+/$SC_$CPU_MM_DumpInEvent MEM16 DataSize=14 SymName="" Offset=validAddr
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -4748,8 +4747,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm_mm16_513_dump.dat", "$CPU", appPktID, MM_MEM16, MM_MAX_FILL_DATA_MEM16, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm_mm16_513_dump.dat","$CPU",appPktID,"MEM16",MM_MAX_FILL_DATA_MEM16,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_mm16_513_dump.dat",hostCPU,appPktID,"MEM16",MM_MAX_FILL_DATA_MEM16,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -4773,7 +4771,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","mm_mm16_513_dump.dat","$CPU","R")
+s ftp_file (ramDir,"na","mm_mm16_513_dump.dat",hostCPU,"R")
 
 wait 5
 
@@ -4890,7 +4888,9 @@ validAddr = $SC_$CPU_TST_MM_RAMAddress
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the command
-/$SC_$CPU_MM_Fill MEM32 DataSize=MM_MAX_DUMP_INEVENT_BYTES Pattern=x'FFFFFFFF' SymName="" Offset=validAddr
+;; Prior to 2.4.1.0, MM_MAX_DUMP_INEVENT_BYTES was MEM32 aligned
+;;/$SC_$CPU_MM_Fill MEM32 DataSize=MM_MAX_DUMP_INEVENT_BYTES Pattern=x'FFFFFFFF' SymName="" Offset=validAddr
+/$SC_$CPU_MM_Fill MEM32 DataSize=12 Pattern=x'FFFFFFFF' SymName="" Offset=validAddr
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -4913,7 +4913,7 @@ if (UT_TW_Status = UT_Success) then
      ($SC_$CPU_MM_MemType = MM_MEM32) AND ;;
      ($SC_$CPU_MM_Address = validAddr) AND ;;
      ($SC_$CPU_MM_DataValue = x'FFFFFFFF') AND ;;
-     ($SC_$CPU_MM_BytesProc = MM_MAX_DUMP_INEVENT_BYTES) AND ;;
+     ($SC_$CPU_MM_BytesProc = 14) AND ;;
      ($SC_$CPU_MM_LastFile = "") THEN
     write "<*> Passed (8000) - Last Command HK items as expected."
     ut_setrequirements MM_8000, "P"
@@ -4943,7 +4943,9 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DUMP_INEVENT_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the command
-/$SC_$CPU_MM_DumpInEvent MEM32 DataSize=MM_MAX_DUMP_INEVENT_BYTES SymName="" Offset=validAddr
+;; Prior to 2.4.1.0, MM_MAX_DUMP_INEVENT_BYTES was MEM32 aligned
+;;/$SC_$CPU_MM_DumpInEvent MEM32 DataSize=MM_MAX_DUMP_INEVENT_BYTES SymName="" Offset=validAddr
+/$SC_$CPU_MM_DumpInEvent MEM32 DataSize=12 SymName="" Offset=validAddr
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -5067,8 +5069,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-;;s get_mm_file_to_cvt(ramDir, "mm_mm32_521_dump.dat", "$CPU", appPktID, MM_MEM32, MM_MAX_FILL_DATA_MEM32, "", validAddr)
-s get_mm_file_to_cvt(ramDir,"mm_mm32_521_dump.dat","$CPU",appPktID,"MEM32",MM_MAX_FILL_DATA_MEM32,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_mm32_521_dump.dat",hostCPU,appPktID,"MEM32",MM_MAX_FILL_DATA_MEM32,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -5092,7 +5093,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","mm_mm32_521_dump.dat","$CPU","R")
+s ftp_file (ramDir,"na","mm_mm32_521_dump.dat",hostCPU,"R")
 
 wait 5
 
@@ -5322,9 +5323,9 @@ write ";**********************************************************************"
 wait 10
 
 close_data_center
-wait 75
+wait 60
                                                                                 
-cfe_startup $CPU
+cfe_startup {hostCPU}
 wait 5
 
 ;; Remove the display pages from the screen

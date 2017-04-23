@@ -1,6 +1,6 @@
 /************************************************************************
 ** File:
-**   $Id: mm_version.h 1.2.3.1.1.3 2015/04/27 15:38:13EDT sstrege Exp  $
+**   $Id: mm_version.h 1.1.2.3 2016/11/17 16:42:16EST sstrege Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -18,12 +18,15 @@
 ** Notes:
 **
 **   $Log: mm_version.h  $
-**   Revision 1.2.3.1.1.3 2015/04/27 15:38:13EDT sstrege 
-**   Changing version number to 2.4.0 for release
-**   Revision 1.2.3.1.1.2 2015/04/15 18:59:33EDT sstrege 
-**   Changing the version number for the branch tip to 9.9.9.
-**   Revision 1.2.3.1.1.1 2015/04/15 18:54:04EDT sstrege 
-**   Changing the version number for the branch to 2.4.0
+**   Revision 1.1.2.3 2016/11/17 16:42:16EST sstrege 
+**   Changing version number for the release to 2.4.1
+**   Revision 1.1.2.2 2016/11/04 13:24:48EDT sstrege 
+**   Changing version number for the branch tip to 9.9.9
+**   Revision 1.1.2.1 2016/11/04 13:21:04EDT sstrege 
+**   Changing the version number for the branch to 2.4.1
+**   Revision 1.1 2015/07/28 12:22:09EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/src/project.pj
 **   Revision 1.2.3.1 2015/03/02 14:28:56EST sstrege 
 **   Added copyright information
 **   Revision 1.2 2010/11/26 13:04:19EST jmdagost 
@@ -44,7 +47,7 @@
 /** \{ */
 #define MM_MAJOR_VERSION          2
 #define MM_MINOR_VERSION          4
-#define MM_REVISION               0
+#define MM_REVISION               1
 /** \} */
 
 #endif /* _mm_version_ */

@@ -1,6 +1,6 @@
 /*************************************************************************
 ** File:
-**   $Id: mm_filedefs.h 1.4 2015/03/02 14:27:02EST sstrege Exp  $
+**   $Id: mm_filedefs.h 1.2 2016/10/31 16:30:38EDT mdeschu Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -23,6 +23,11 @@
 ** Notes:
 **
 **   $Log: mm_filedefs.h  $
+**   Revision 1.2 2016/10/31 16:30:38EDT mdeschu 
+**   Move CFE subtype and description to public platform config header
+**   Revision 1.1 2015/07/28 12:21:44EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/src/project.pj
 **   Revision 1.4 2015/03/02 14:27:02EST sstrege 
 **   Added copyright information
 **   Revision 1.3 2008/05/19 15:23:13EDT dahardison 
@@ -40,14 +45,7 @@
 /************************************************************************
 ** Macro Definitions
 *************************************************************************/
-/**
-** \name cFE file header constants for MM created files */ 
-/** \{ */
-#define MM_CFE_HDR_DESCRIPTION     "Memory Manager Dump File"  /**< \brief What the cFE file header
-                                                                     description field should be set to */
-#define MM_CFE_HDR_SUBTYPE         0                           /**< \brief What the cFE file header
-                                                                     subtype should be set to           */
-/** \} */
+
 
 /*************************************************************************
 ** Type Definitions

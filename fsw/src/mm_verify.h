@@ -1,6 +1,6 @@
 /*************************************************************************
 ** File:
-**   $Id: mm_verify.h 1.7 2015/03/02 14:26:30EST sstrege Exp  $
+**   $Id: mm_verify.h 1.1 2015/07/28 12:22:08EDT rperera Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -24,6 +24,9 @@
 ** Notes:
 **
 **   $Log: mm_verify.h  $
+**   Revision 1.1 2015/07/28 12:22:08EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/src/project.pj
 **   Revision 1.7 2015/03/02 14:26:30EST sstrege 
 **   Added copyright information
 **   Revision 1.6 2011/11/30 15:54:48EST jmdagost 

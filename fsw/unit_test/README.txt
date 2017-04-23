@@ -1,213 +1,74 @@
-
-                     -----------------------------------
-                     | README.TXT for MM App Unit Test |
-                     -----------------------------------
-
-
---------
-Contents
---------
-
-1. Environment
-2. Make Instructions
-  2.1 Compiler options and build sequence
-  2.2 Directory/Folder Layout
-
-3. Overall Coverage Statistics
-  3.1 Comments on Functions with less than 100% Coverage
-
-
-
------------
-Environment
------------
-
-The round of unit tests run under CFS_FSW_DCR 11870 were executed in a 64-bit CentOS (Linux) Virtual 
-Machine running under Parallels on an iMac.  Although it is a 64-bit OS, the code was compiled under 
-a 32-bit configuration.
-
-The makefile psp/fsw/pc-linux/make/compiler-opts.mak includes the following modified line:
-
-     ARCH_OPTS=-m32 -fPIC
-     
-This allows the UTF files to be built as 32-bit code under the 64-bit OS.
-
-The unit test reads instructions from the input file cs_utf_cmds.in (located in the unit_test directory), and 
-generates an output file named cs_utf_test.out.
+##############################################################################
+## $Id: README.txt 1.4 2016/10/31 22:11:03EDT mdeschu Exp  $
+##
+## Purpose: CFS MM application unit test instructions, results, and code coverage
+##
+## Author: Charles Zogby
+##
+## $Log: README.txt  $
+## Revision 1.4 2016/10/31 22:11:03EDT mdeschu 
+## Update gcov results, README and log file for MM unit tests for 2.4.1
+## Revision 1.3 2016/10/24 18:35:24EDT czogby 
+## Code Walkthough Updates
+## Revision 1.2 2016/03/04 20:07:42EST czogby 
+## Update log file for run with official release of MM 2.4.0
+## Revision 1.1 2016/02/03 17:11:38EST czogby 
+## Initial revision
+## Member added to project /CFS-APPs-PROJECT/mm/fsw/unit_test/project.pj
+##############################################################################
 
 
------------------
-Make instructions
------------------
+-------------------------
+MM Unit Test Instructions
+-------------------------
+This unit test was run in a virtual machine running CentOS and uses the ut-assert stubs and default hooks for the 
+cFE, OSAL and PSP. The ut-assert framework, stubs, and hooks are located in the directory cfe/tools/ut-assert and 
+are configuration managed in MKS in the FSW tools repository on server tlserver3.
 
+Note: Not testing any variations in preprocessor macro definitions - default values 
+in mm_platform_config.c cause all #if statements to evalute to TRUE
 
------------------------------------
-Compiler Options and Build Sequence
------------------------------------
+To run the unit test enter the following commands at the command line prompt in
+unit test directory.
 
-For the 64-bit CentOS environment, I had to add "-m32 -fPIC" to the DEFAULT-COPT definition, and "-m32" to the
-LOPT definition in the unit test makefile.
+make clean
+make 
+make run
+make gcov
 
-The unit test makefile (named "makefile") contains options to build the unit test plus the tables.  The makefile 
-makes a copy of the default table for use in the unit test.  It currently contains the same data as the default
-table.
+MM 2.4.1.0 Unit Test Results:
 
-To re-run the unit test, perform the following steps in the /apps/mm/fsw/unit-test directory:
+Tests Executed:    249
+Assert Pass Count: 1035
+Assert Fail Count: 0
 
-  make clean
-  make
-  ./utf_test_mm.bin
-  make gcov
+gcov: '../src/mm_mem32.c' 100.00%  109
+gcov: '../src/mm_mem8.c' 100.00%  108
+gcov: '../src/mm_dump.c' 100.00%  343
+gcov: '../src/mm_app.c' 100.00%  192
+gcov: '../src/mm_load.c' 100.00%  432
+gcov: '../src/mm_mem16.c' 100.00%  108
+gcov: '../src/mm_utils.c' 100.00%  93
 
-This will generate fresh coverage reports and output files.
+==========================================================================
+mm_mem32.c - 100.00% coverage
 
+==========================================================================
+mm_mem8.c - 100.00% coverage
 
------------------------
-Directory/Folder layout
------------------------
+==========================================================================
+mm_dump.c - 100.00% coverage
 
-The makefile uses relative paths (from the unit_test directory) to find the appropriate header and source files.  
-The directory layout used is:
+==========================================================================
+mm_app.c - 100.00% coverage
 
+==========================================================================
+mm_load.c - 100.00% coverage
 
-<top-level path>
- |
- |--cfs-mission <--from the "cfs-mission" MKS project
- |   |
- |   |--apps <-- from the "CFS_REPOSITORY" MKS project
- |   |   |
- |   |   |--cfs-lib
- |   |   |   |
- |   |   |   |--public_inc
- |   |   |   |
- |   |   |   |--src
- |   |   |
- |   |   |--mm
- |   |   |   |
- |   |   |   |--docs
- |   |   |   |
- |   |   |   |--fsw
- |   |   |   |   |
- |   |   |   |   |--for_build (not used in MM unit test)
- |   |   |   |   |
- |   |   |   |   |--mission_inc
- |   |   |   |   |
- |   |   |   |   |--platform_inc
- |   |   |   |   |
- |   |   |   |   |--public_inc
- |   |   |   |   |
- |   |   |   |   |--src
- |   |   |   |   |
- |   |   |   |   |--unit_test <------- MM unit test is compiled and run from this directory
- |   |   |   |       |
- |   |   |   |       |--ram <-------- contains load and dump files generated by the unit test
- |   |   |   |       
- |   |   |   |--test_and_ground (not used in MM unit test)
- |   |   |   
- |   |   |--inc (not used in MM unit test)   
- |   |
- |   |--build (not used in MM unit test)
- |   |
- |   |--cfe <--from the "MKS-CFE-PROJECT" MKS project
- |   |   |
- |   |   |--tools
- |   |   |   |
- |   |   |   |--elf2cfetbl <------ (not used in MM unit test since there are currently no tables)
- |   |   |   |
- |   |   |   |--utf
- |   |   |       |
- |   |   |       |--src
- |   |   |       |
- |   |   |       |--inc
- |   |   |   
- |   |   |
- |   |   |--fsw
- |   |       |
- |   |       |--mission_inc
- |   |       |
- |   |       |--platform_inc
- |   |       |   |
- |   |       |   |--cpu1
- |   |       |    
- |   |       |--cfe-core
- |   |           |
- |   |           |--src
- |   |           |   |
- |   |           |   |--sb
- |   |           |   |
- |   |           |   |--time
- |   |           |   |
- |   |           |   |--es
- |   |           |   |
- |   |           |   |--evs
- |   |           |   |
- |   |           |   |--fs
- |   |           |   |
- |   |           |   |--tbl
- |   |           |   |
- |   |           |   |--inc
- |   |           |   
- |   |           |--os
- |   |               |
- |   |               |--inc
- |   |
- |   |--docs (not used in MM unit test)
- |   |
- |   |
- |   |--osal <--from the "MKS-OSAL-REPOSITORY" MKS project
- |   |   |
- |   |   |--build
- |   |   |   |
- |   |   |   |--inc
- |   |   |
- |   |   |--src
- |   |       |
- |   |       |--os
- |   |       |   |
- |   |       |   |--inc
- |   |       |   |
- |   |       |   |--posix
- |   |       |
- |   |       |--bsp
- |   |           |
- |   |           |--pc-linux
- |   |               |
- |   |               |--src
- |   |
- |   |
- |   |--psp <--from the "CFE-PSP-REPOSITORY" MKS project
- |       |
- |       |--fsw
- |           |
- |           |--inc
- |           |
- |           |--pc-linux
- |               |
- |               |--src
- |               |
- |               |--inc
- |
-      
+==========================================================================
+mm_mem16.c - 100.00% coverage
 
+==========================================================================
+mm_utils.c - 100.00% coverage
 
----------------------------
-Overall Coverage Statistics
----------------------------
-
-gcov: '../src/mm_app.c' 100.00%  119
-gcov: '../src/mm_load.c' 100.00%  384
-gcov: '../src/mm_dump.c' 100.00%  300
-gcov: '../src/mm_mem32.c' 100.00%  85
-gcov: '../src/mm_mem16.c' 100.00%  86
-gcov: '../src/mm_mem8.c' 100.00%  86
-gcov: '../src/mm_utils.c' 100.00%  91
-
----------------------------------------------------------------------------------------
-
-
-Comments on Functions with less than 100% Coverage
------------------------------------------------
-
-None
-
-
+==========================================================================

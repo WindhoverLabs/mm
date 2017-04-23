@@ -1,6 +1,6 @@
 /*************************************************************************
 ** File:
-**   $Id: mm_utils.c 1.11 2015/03/20 14:16:35EDT lwalling Exp  $
+**   $Id: mm_utils.c 1.2 2016/10/30 00:48:49EDT mdeschu Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -15,6 +15,11 @@
 **   Utility functions used for processing CFS memory manager commands
 **
 **   $Log: mm_utils.c  $
+**   Revision 1.2 2016/10/30 00:48:49EDT mdeschu 
+**   Use c-style casts to clean up compiler warnings in calls to CFE_EVS_SendEvent
+**   Revision 1.1 2015/07/28 12:22:04EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/src/project.pj
 **   Revision 1.11 2015/03/20 14:16:35EDT lwalling 
 **   Add last peek/poke/fill command data value to housekeeping telemetry
 **   Revision 1.10 2015/03/02 14:27:10EST sstrege 
@@ -173,7 +178,7 @@ boolean MM_VerifyPeekPokeParams(uint32 Address,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_ALIGN16_ERR_EID, CFE_EVS_ERROR,
                               "Data and address not 16 bit aligned: Addr = 0x%08X Size = %d",
-                                                                       Address, SizeInBytes);
+                                                                       (unsigned int)Address, SizeInBytes);
             
             
             }
@@ -187,7 +192,7 @@ boolean MM_VerifyPeekPokeParams(uint32 Address,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_ALIGN32_ERR_EID, CFE_EVS_ERROR,
                               "Data and address not 32 bit aligned: Addr = 0x%08X Size = %d",
-                                                                       Address, SizeInBytes);
+                                                                       (unsigned int)Address, SizeInBytes);
             }
          break;
       
@@ -213,7 +218,7 @@ boolean MM_VerifyPeekPokeParams(uint32 Address,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                            "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                           OS_Status, Address, SizeInBytes, CFE_PSP_MEM_RAM); 
+                           (unsigned int)OS_Status, (unsigned int)Address, SizeInBytes, CFE_PSP_MEM_RAM); 
             }
             break;
          
@@ -226,7 +231,7 @@ boolean MM_VerifyPeekPokeParams(uint32 Address,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                            "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                           OS_Status, Address, SizeInBytes, CFE_PSP_MEM_EEPROM); 
+                           (unsigned int)OS_Status, (unsigned int)Address, SizeInBytes, CFE_PSP_MEM_EEPROM); 
             }
             break;
          
@@ -240,7 +245,7 @@ boolean MM_VerifyPeekPokeParams(uint32 Address,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                            "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                           OS_Status, Address, SizeInBytes, CFE_PSP_MEM_RAM); 
+                           (unsigned int)OS_Status, (unsigned int)Address, SizeInBytes, CFE_PSP_MEM_RAM); 
             }
             /* 
             ** Peeks and Pokes must be 32 bits wide for this memory type 
@@ -265,7 +270,7 @@ boolean MM_VerifyPeekPokeParams(uint32 Address,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                            "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                           OS_Status, Address, SizeInBytes, CFE_PSP_MEM_RAM); 
+                           (unsigned int)OS_Status, (unsigned int)Address, SizeInBytes, CFE_PSP_MEM_RAM); 
             }
             /* 
             ** Peeks and Pokes must be 16 bits wide for this memory type
@@ -290,7 +295,7 @@ boolean MM_VerifyPeekPokeParams(uint32 Address,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_OS_MEMVALIDATE_ERR_EID, CFE_EVS_ERROR,
                            "CFE_PSP_MemValidateRange error received: RC = 0x%08X Addr = 0x%08X Size = %d MemType = %d",
-                           OS_Status, Address, SizeInBytes, CFE_PSP_MEM_RAM); 
+                           (unsigned int)OS_Status, (unsigned int)Address, SizeInBytes, CFE_PSP_MEM_RAM); 
             }
             /* 
             ** Peeks and Pokes must be 8 bits wide for this memory type

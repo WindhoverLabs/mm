@@ -118,6 +118,10 @@ PROC $sc_$cpu_mm_eeprom
 ;					in place of FillPattern and updated the
 ;					requirements to add 3400 and 3500 and
 ;					the wording changes for 8000 and 9000
+;       11/14/16        Walt Moleski    Updated for MM 2.4.1.0 using CPU1 for
+;                                       commanding and added a hostCPU variable
+;                                       for the utility procs to connect to the
+;                                       proper host IP address.
 ;
 ;  Arguments
 ;	None.
@@ -232,10 +236,12 @@ LOCAL dataToSend
 LOCAL MMAppName = "MM"
 LOCAL ramDir = "RAM:0"
 
-;; This define is calculated in the mm_dump.c file and could not be used
+local hostCPU = "$CPU"
+
+;; This define is calculated in the mm_dump.h file and could not be used
 ;; directly from the MM source. Thus, if this size changes, this calculation
 ;; must be changed here
-#define MM_MAX_DUMP_INEVENT_BYTES ((CFE_EVS_MAX_MESSAGE_LENGTH - (13 + 25)) / 5)
+#define MM_MAX_DUMP_INEVENT_BYTES ((CFE_EVS_MAX_MESSAGE_LENGTH - (13 + 33)) / 5)
 
 ;; Determine the Packet IDs for the MM Load/Dump file CVT
 local varPktID
@@ -266,9 +272,9 @@ write ";**********************************************************************"
 wait 10
 
 close_data_center
-wait 75
+wait 60
                                                                                 
-cfe_startup $CPU
+cfe_startup {hostCPU}
 wait 5
 
 write ";**********************************************************************"
@@ -284,7 +290,7 @@ write ";**********************************************************************"
 ut_setupevents "$SC", "$CPU", "CFE_ES", CFE_ES_START_INF_EID, "INFO", 1
 ut_setupevents "$SC", "$CPU", {MMAppName}, MM_INIT_INF_EID, "INFO", 2
 
-s load_start_app (MMAppName,"$CPU","MM_AppMain")
+s load_start_app (MMAppName,hostCPU,"MM_AppMain")
 
 ; Wait for app startup events
 ut_tlmwait  $SC_$CPU_find_event[2].num_found_messages, 1
@@ -319,7 +325,7 @@ write ";**********************************************************************"
 ut_setupevents "$SC", "$CPU", "CFE_ES", CFE_ES_START_INF_EID, "INFO", 1
 ut_setupevents "$SC", "$CPU", "TST_MM", TST_MM_INIT_INF_EID, "INFO", 2
 
-s load_start_app ("TST_MM","$CPU","TST_MM_AppMain")
+s load_start_app ("TST_MM",hostCPU,"TST_MM_AppMain")
 
 ; Wait for app startup events
 ut_tlmwait  $SC_$CPU_find_event[2].num_found_messages, 1
@@ -1921,7 +1927,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-s get_mm_file_to_cvt(ramDir,"mm_ee3_2_dump.dat","$CPU",appPktID,"EEPROM",dataToSend,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_ee3_2_dump.dat",hostCPU,appPktID,"EEPROM",dataToSend,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -2259,7 +2265,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_LD_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the command to upload the file and issue the MM_LoadFile command
-s load_memory ("valideeload.dat", "$CPU")
+s load_memory ("valideeload.dat", hostCPU)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -2324,7 +2330,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-s get_mm_file_to_cvt(ramDir,"mm_ee4_2_dump.dat","$CPU",appPktID,"EEPROM",dataToSend,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_ee4_2_dump.dat",hostCPU,appPktID,"EEPROM",dataToSend,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -2348,7 +2354,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","mm_ee4_2_dump.dat","$CPU","R")
+s ftp_file (ramDir,"na","mm_ee4_2_dump.dat",hostCPU,"R")
 
 wait 5
 
@@ -2386,14 +2392,14 @@ hdrVar = varPktID & "MEMTYPE"
 write "Step 4.3: ", hdrVar, " = ", {hdrVar}
 
 ;; Create the Load File
-s create_mm_file_from_cvt("$CPU",varPktID,appPktID,hexAppID,"EEPROM Load File with an invalid CRC","badeecrcload.dat")
+s create_mm_file_from_cvt(hostCPU,varPktID,appPktID,hexAppID,"EEPROM Load File with an invalid CRC","badeecrcload.dat")
 
 ;; Setup for the Event message
 ut_setupevents "$SC", "$CPU", {MMAppName}, MM_LOAD_FILE_CRC_ERR_EID, "ERROR", 1
 
 errCtr = $SC_$CPU_MM_CMDEC + 1
 ;; Transfer the file to s/c and issue the MM LoadFile command
-s load_memory ("badeecrcload.dat", "$CPU")
+s load_memory ("badeecrcload.dat", hostCPU)
 
 ut_tlmwait  $SC_$CPU_MM_CMDEC, {errCtr}
 if (UT_TW_Status = UT_Success) then
@@ -2417,7 +2423,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","badeecrcload.dat","$CPU","R")
+s ftp_file (ramDir,"na","badeecrcload.dat",hostCPU,"R")
 
 wait 5
 
@@ -2466,7 +2472,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","overmaxload.dat","$CPU","R")
+s ftp_file (ramDir,"na","overmaxload.dat",hostCPU,"R")
 
 wait 5
 
@@ -2596,10 +2602,10 @@ write ";  Step 4.5.5: Download the load file in order to use it again later "
 write ";  and delete the onboard file. "
 write ";**********************************************************************"
 ;; Delete the onboard file
-s ftp_file (ramDir,"maxdataeeload.dat","maxdataeeload.dat","$CPU","G")
+s ftp_file (ramDir,"maxdataeeload.dat","maxdataeeload.dat",hostCPU,"G")
   
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","maxdataeeload.dat","$CPU","R")
+s ftp_file (ramDir,"na","maxdataeeload.dat",hostCPU,"R")
 
 wait 5
 
@@ -2778,7 +2784,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_OS_MEMVALIDATE_ERR_EID, "ERROR", 1
 
 errCtr = $SC_$CPU_MM_CMDEC + 1
 ;; Transfer the file to s/c and issue the MM LoadFile command
-;;s load_memory ("badeeaddrload.dat", "$CPU")
+;;s load_memory ("badeeaddrload.dat", hostCPU)
 /$SC_$CPU_MM_LoadFile Filename="/ram/badeeaddrload.dat"
 
 ut_tlmwait  $SC_$CPU_MM_CMDEC, {errCtr}
@@ -3017,7 +3023,7 @@ validAddr = $SC_$CPU_TST_MM_EEPROMAddress
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-s get_mm_file_to_cvt(ramDir,"mm_ee4_14_dump.dat","$CPU",appPktID,"EEPROM",MM_MAX_DUMP_FILE_DATA_EEPROM,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_ee4_14_dump.dat",hostCPU,appPktID,"EEPROM",MM_MAX_DUMP_FILE_DATA_EEPROM,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -3041,7 +3047,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","mm_ee4_14_dump.dat","$CPU","R")
+s ftp_file (ramDir,"na","mm_ee4_14_dump.dat",hostCPU,"R")
 
 wait 5
 
@@ -3054,7 +3060,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-s get_mm_file_to_cvt(ramDir,"mm_ee4_15_dump.dat","$CPU",appPktID,"EEPROM",1,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_ee4_15_dump.dat",hostCPU,appPktID,"EEPROM",1,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -3609,7 +3615,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-s get_mm_file_to_cvt(ramDir,"mm_ee5_5_dump.dat","$CPU",appPktID,"EEPROM",MM_MAX_FILL_DATA_EEPROM,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_ee5_5_dump.dat",hostCPU,appPktID,"EEPROM",MM_MAX_FILL_DATA_EEPROM,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -3651,7 +3657,7 @@ else
 endif
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","mm_ee5_5_dump.dat","$CPU","R")
+s ftp_file (ramDir,"na","mm_ee5_5_dump.dat",hostCPU,"R")
 
 wait 5
 
@@ -3989,7 +3995,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_LD_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the command to upload the file and issue the MM_LoadFile command
-s load_memory ("maxdataeeload.dat", "$CPU")
+s load_memory ("maxdataeeload.dat", hostCPU)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -4051,7 +4057,7 @@ write ";**********************************************************************"
 ut_setrequirements MM_3300, "A"
 
 ;; Delete the onboard file
-s ftp_file (ramDir,"na","maxdataramload.dat","$CPU","R")
+s ftp_file (ramDir,"na","maxdataramload.dat",hostCPU,"R")
 
 write ";**********************************************************************"
 write ";  Step 6.6: Send a Dump to File command to a valid EEPROM address and a"
@@ -4062,7 +4068,7 @@ ut_setupevents "$SC", "$CPU", {MMAppName}, MM_DMP_MEM_FILE_INF_EID, "INFO", 1
 
 cmdCtr = $SC_$CPU_MM_CMDPC + 1
 ;; Send the Dump command and transfer the file to ground
-s get_mm_file_to_cvt(ramDir,"mm_ee6_4_dump.dat","$CPU",appPktID,"EEPROM",MM_MAX_DUMP_FILE_DATA_EEPROM,"",validAddr)
+s get_mm_file_to_cvt(ramDir,"mm_ee6_4_dump.dat",hostCPU,appPktID,"EEPROM",MM_MAX_DUMP_FILE_DATA_EEPROM,"",validAddr)
 
 ut_tlmwait  $SC_$CPU_MM_CMDPC, {cmdCtr}
 if (UT_TW_Status = UT_Success) then
@@ -4098,7 +4104,7 @@ wait 30
 
 ;; May have to wait until the data file finishes before doing the reset
 ;; need to ftp the file down to ground
-s ftp_file (ramDir,"mm_eeprom_perf.dat","mm_eeprom_perf.dat","$CPU","G")
+s ftp_file (ramDir,"mm_eeprom_perf.dat","mm_eeprom_perf.dat",hostCPU,"G")
 wait 5
 
 write ";**********************************************************************"
@@ -4108,9 +4114,9 @@ write ";**********************************************************************"
 wait 10
 
 close_data_center
-wait 75
+wait 60
                                                                                 
-cfe_startup $CPU
+cfe_startup {hostCPU}
 wait 5
 
 ;; Remove the display pages from the screen

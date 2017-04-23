@@ -1,10 +1,10 @@
 core Flight System (cFS) Memory Manager Application (MM) 
 Open Source Release Readme
 
-MM Release 2.4.0 
+MM Release 2.4.1 
 
 Date: 
-April 27, 2015
+November 17, 2016
 
 Introduction:
   The Memory Manager application (MM) is a core Flight System (cFS) application 
@@ -32,7 +32,7 @@ Introduction:
   available in cfs-mm-2.4.0-OSS-release/docs/users_guide
   
   There are also "Quick start" instructions provided in 
-  cFE-6.4.1-OSS-release/cfe-OSS-readme.txt   
+  cFE-6.5.0-OSS-release/cfe-OSS-readme.txt   
   
   The OSAL is available at http://sourceforge.net/projects/osal/ and 
   github.com/nasa/
@@ -44,16 +44,16 @@ Introduction:
  
  
 Software Included:
-  Memory Manager application (MM) 2.4.0
+  Memory Manager application (MM) 2.4.1
   
  
 Software Required:
 
- Operating System Abstraction Layer 4.1.1 or higher can be 
+ Operating System Abstraction Layer 4.2.0 or higher can be 
  obtained at http://sourceforge.net/projects/osal or 
  github.com/nasa/osal
  
- core Flight Executive 6.4.1 or higher can be obtained at
+ core Flight Executive 6.5.0 or higher can be obtained at
  http://sorceforge.net/projects/coreflightexec
 
   

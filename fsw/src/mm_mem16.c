@@ -1,6 +1,6 @@
 /*************************************************************************
 ** File:
-**   $Id: mm_mem16.c 1.15 2015/04/14 15:29:04EDT lwalling Exp  $
+**   $Id: mm_mem16.c 1.2 2016/10/30 00:48:51EDT mdeschu Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -16,6 +16,11 @@
 **   for the conditionally compiled MM_MEM16 optional memory type.
 **
 **   $Log: mm_mem16.c  $
+**   Revision 1.2 2016/10/30 00:48:51EDT mdeschu 
+**   Use c-style casts to clean up compiler warnings in calls to CFE_EVS_SendEvent
+**   Revision 1.1 2015/07/28 12:21:49EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/src/project.pj
 **   Revision 1.15 2015/04/14 15:29:04EDT lwalling 
 **   Removed unnecessary backslash characters from string format definitions
 **   Revision 1.14 2015/04/06 15:41:25EDT lwalling 
@@ -100,7 +105,7 @@ boolean MM_LoadMem16FromFile(uint32                   FileHandle,
          BytesRemaining = 0;
          CFE_EVS_SendEvent(MM_OS_READ_ERR_EID, CFE_EVS_ERROR,
                            "OS_read error received: RC = 0x%08X Expected = %d File = '%s'", 
-                           ReadLength, SegmentSize, FileName);
+                           (unsigned int)ReadLength, (int)SegmentSize, FileName);
       }
       else
       {
@@ -119,7 +124,7 @@ boolean MM_LoadMem16FromFile(uint32                   FileHandle,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_PSP_WRITE_ERR_EID, CFE_EVS_ERROR,
                                 "PSP write memory error: RC=0x%08X, Address=0x%08X, MemType=MEM16", 
-                                 PSP_Status, (uint32) DataPointer16);
+                                 (unsigned int)PSP_Status, (unsigned int)DataPointer16);
                /* Stop load segment loop */
                break;
             }
@@ -197,7 +202,7 @@ boolean MM_DumpMem16ToFile(uint32                    FileHandle,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_PSP_READ_ERR_EID, CFE_EVS_ERROR,
                "PSP read memory error: RC=0x%08X, Src=0x%08X, Tgt=0x%08X, Type=MEM16", 
-                PSP_Status, (uint32) DataPointer16, (uint32) &ioBuffer16[i]);
+                (unsigned int)PSP_Status, (unsigned int)DataPointer16, (unsigned int)&ioBuffer16[i]);
             /* Stop load i/o buffer loop */
             break;
          }
@@ -227,7 +232,7 @@ boolean MM_DumpMem16ToFile(uint32                    FileHandle,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_OS_WRITE_EXP_ERR_EID, CFE_EVS_ERROR,
                               "OS_write error received: RC = 0x%08X Expected = %d File = '%s'", 
-                               OS_Status, SegmentSize, FileName);
+                               (unsigned int)OS_Status, (int)SegmentSize, FileName);
          }
       }
    }
@@ -287,7 +292,7 @@ void MM_FillMem16(uint32           DestAddress,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_PSP_WRITE_ERR_EID, CFE_EVS_ERROR,
                              "PSP write memory error: RC=0x%08X, Address=0x%08X, MemType=MEM16", 
-                              PSP_Status, (uint32) DataPointer16);
+                              (unsigned int)PSP_Status, (unsigned int)DataPointer16);
             /* Stop fill segment loop */
             break;
          }

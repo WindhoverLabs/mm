@@ -1,6 +1,6 @@
 /*************************************************************************
 ** File:
-**   $Id: mm_mem16.h 1.4 2015/03/02 14:27:06EST sstrege Exp  $
+**   $Id: mm_mem16.h 1.1 2015/07/28 12:21:51EDT rperera Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -23,6 +23,9 @@
 ** Notes:
 **
 **   $Log: mm_mem16.h  $
+**   Revision 1.1 2015/07/28 12:21:51EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/src/project.pj
 **   Revision 1.4 2015/03/02 14:27:06EST sstrege 
 **   Added copyright information
 **   Revision 1.3 2008/05/19 15:23:22EDT dahardison 

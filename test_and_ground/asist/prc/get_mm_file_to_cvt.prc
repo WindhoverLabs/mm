@@ -57,24 +57,30 @@ elseif (cpu = "2") then
    ipaddress = CPU2_IP
 elseif (cpu = "3") then
    ipaddress = CPU3_IP
+elseif (cpu = "4") then
+   ipaddress = CPU4_IP
 else
    error "CPU"&cpu&" is not VALID !!!"
    return
 endif
 
-;============================================================
-; Append 'P' to appid
-; This is not needed since we pass in the appid as "Pxxxx"
-;============================================================
-;;appid = "P" & appid
-
 ; ===========================================================
 ; Set up base command front & rear
 ; ===========================================================
-if (SC = "") and (CPU = "1") then
-  local base_cmd_expr_front = "/"
+local base_cmd_expr_front
+if (SC <> "") then
+  base_cmd_expr_front = "/" & SC
 else
-  local base_cmd_expr_front = "/"&(SC)&"CPU"&(cpu)&"_"
+  base_cmd_expr_front = "/"
+endif
+
+;; Add the CPU definition
+base_cmd_expr_front = base_cmd_expr_front & CPU_CFG
+
+if (numCPUs > 1) then
+  base_cmd_expr_front = base_cmd_expr_front & (cpu) & "_"
+else
+  base_cmd_expr_front = base_cmd_expr_front & "_"
 endif
 
 ; ============================================================
@@ -93,6 +99,7 @@ if (supress = "0") then
 endif
 %cmd (dmp_cmd_expr)
 
+wait 15
 if (supress = "0") then
   write
   write "   The Filename is: ", filename

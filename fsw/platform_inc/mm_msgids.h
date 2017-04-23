@@ -1,6 +1,6 @@
 /*************************************************************************
 ** File:
-**   $Id: mm_msgids.h 1.2 2015/03/02 14:26:59EST sstrege Exp  $
+**   $Id: mm_msgids.h 1.1 2015/07/28 12:21:18EDT rperera Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -17,6 +17,9 @@
 ** Notes:
 **
 **   $Log: mm_msgids.h  $
+**   Revision 1.1 2015/07/28 12:21:18EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/platform_inc/project.pj
 **   Revision 1.2 2015/03/02 14:26:59EST sstrege 
 **   Added copyright information
 **   Revision 1.1 2008/05/22 14:59:11EDT dahardison 

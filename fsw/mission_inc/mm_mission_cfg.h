@@ -1,6 +1,6 @@
 /*************************************************************************
 ** File:
-**   $Id: mm_mission_cfg.h 1.3 2015/03/31 10:56:45EDT sstrege Exp  $
+**   $Id: mm_mission_cfg.h 1.1 2015/07/28 12:21:06EDT rperera Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -24,6 +24,9 @@
 ** Notes:
 **
 **   $Log: mm_mission_cfg.h  $
+**   Revision 1.1 2015/07/28 12:21:06EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/mission_inc/project.pj
 **   Revision 1.3 2015/03/31 10:56:45EDT sstrege 
 **   Added cfe_mission_cfg.h include
 **   Revision 1.2 2015/03/02 14:26:44EST sstrege 

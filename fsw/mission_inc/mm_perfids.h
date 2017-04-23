@@ -1,6 +1,6 @@
 /*************************************************************************
 ** File:
-**   $Id: mm_perfids.h 1.3 2015/03/02 14:26:52EST sstrege Exp  $
+**   $Id: mm_perfids.h 1.1 2015/07/28 12:21:08EDT rperera Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -17,6 +17,9 @@
 ** Notes:
 **
 **   $Log: mm_perfids.h  $
+**   Revision 1.1 2015/07/28 12:21:08EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/mission_inc/project.pj
 **   Revision 1.3 2015/03/02 14:26:52EST sstrege 
 **   Added copyright information
 **   Revision 1.2 2010/05/21 15:35:03EDT jmdagost 

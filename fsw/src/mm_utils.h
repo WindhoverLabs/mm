@@ -1,6 +1,6 @@
 /*************************************************************************
 ** File:
-**   $Id: mm_utils.h 1.5 2015/03/02 14:27:07EST sstrege Exp  $
+**   $Id: mm_utils.h 1.1 2015/07/28 12:22:06EDT rperera Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -22,6 +22,9 @@
 ** Notes:
 **
 **   $Log: mm_utils.h  $
+**   Revision 1.1 2015/07/28 12:22:06EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/src/project.pj
 **   Revision 1.5 2015/03/02 14:27:07EST sstrege 
 **   Added copyright information
 **   Revision 1.4 2008/09/05 14:23:56EDT dahardison 

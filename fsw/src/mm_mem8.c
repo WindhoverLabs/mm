@@ -1,6 +1,6 @@
 /*************************************************************************
 ** File:
-**   $Id: mm_mem8.c 1.15 2015/04/14 15:29:01EDT lwalling Exp  $
+**   $Id: mm_mem8.c 1.2 2016/10/30 00:48:50EDT mdeschu Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -16,6 +16,11 @@
 **   for the conditionally compiled MM_MEM8 optional memory type.
 **
 **   $Log: mm_mem8.c  $
+**   Revision 1.2 2016/10/30 00:48:50EDT mdeschu 
+**   Use c-style casts to clean up compiler warnings in calls to CFE_EVS_SendEvent
+**   Revision 1.1 2015/07/28 12:21:57EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/src/project.pj
 **   Revision 1.15 2015/04/14 15:29:01EDT lwalling 
 **   Removed unnecessary backslash characters from string format definitions
 **   Revision 1.14 2015/04/06 15:41:23EDT lwalling 
@@ -99,7 +104,7 @@ boolean MM_LoadMem8FromFile(uint32                   FileHandle,
          BytesRemaining = 0;
          CFE_EVS_SendEvent(MM_OS_READ_ERR_EID, CFE_EVS_ERROR,
                            "OS_read error received: RC = 0x%08X Expected = %d File = '%s'", 
-                           ReadLength, SegmentSize, FileName);
+                           (unsigned int)ReadLength, (int)SegmentSize, FileName);
       }
       else
       {
@@ -118,7 +123,7 @@ boolean MM_LoadMem8FromFile(uint32                   FileHandle,
                MM_AppData.ErrCounter++;
                CFE_EVS_SendEvent(MM_PSP_WRITE_ERR_EID, CFE_EVS_ERROR,
                                 "PSP write memory error: RC=0x%08X, Address=0x%08X, MemType=MEM8", 
-                                 PSP_Status, (uint32) DataPointer8);
+                                 (unsigned int)PSP_Status, (unsigned int) DataPointer8);
                /* Stop load segment loop */
                break;
             }
@@ -196,7 +201,7 @@ boolean MM_DumpMem8ToFile(uint32                    FileHandle,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_PSP_READ_ERR_EID, CFE_EVS_ERROR,
                "PSP read memory error: RC=0x%08X, Src=0x%08X, Tgt=0x%08X, Type=MEM8", 
-                PSP_Status, (uint32) DataPointer8, (uint32) &ioBuffer8[i]);
+                (unsigned int)PSP_Status, (unsigned int) DataPointer8, (unsigned int) &ioBuffer8[i]);
             /* Stop load i/o buffer loop */
             break;
          }
@@ -226,7 +231,7 @@ boolean MM_DumpMem8ToFile(uint32                    FileHandle,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_OS_WRITE_EXP_ERR_EID, CFE_EVS_ERROR,
                               "OS_write error received: RC = 0x%08X Expected = %d File = '%s'", 
-                               OS_Status, SegmentSize, FileName);
+                               (unsigned int)OS_Status, (int)SegmentSize, FileName);
          }
       }
    }
@@ -286,7 +291,7 @@ void MM_FillMem8(uint32           DestAddress,
             MM_AppData.ErrCounter++;
             CFE_EVS_SendEvent(MM_PSP_WRITE_ERR_EID, CFE_EVS_ERROR,
                              "PSP write memory error: RC=0x%08X, Address=0x%08X, MemType=MEM8", 
-                              PSP_Status, (uint32) DataPointer8);
+                              (unsigned int)PSP_Status, (unsigned int)DataPointer8);
             /* Stop fill segment loop */
             break;
          }

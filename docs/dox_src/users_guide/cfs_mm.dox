@@ -22,6 +22,9 @@
 
   \verbatim  
   $Log: cfs_mm.dox  $
+  Revision 1.1 2015/07/28 12:20:25EDT rperera 
+  Initial revision
+  Member added to project /CFS-APPs-PROJECT/mm/docs/dox_src/users_guide/project.pj
   Revision 1.6 2011/11/30 15:54:28EST jmdagost 
   Update documentation to include descriptions and usage of the default CRC algorithm definitions.
   Revision 1.5 2010/12/03 13:36:03EST jmdagost 

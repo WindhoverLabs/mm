@@ -1,6 +1,6 @@
 /************************************************************************
 ** File:
-**   $Id: mm_msgdefs.h 1.9 2015/04/01 14:50:28EDT sstrege Exp  $
+**   $Id: mm_msgdefs.h 1.1 2015/07/28 12:22:02EDT rperera Exp  $
 **
 **   Copyright © 2007-2014 United States Government as represented by the 
 **   Administrator of the National Aeronautics and Space Administration. 
@@ -30,6 +30,9 @@
 **   ADD THEM TO mm_msg.h IF NEEDED! 
 **
 **   $Log: mm_msgdefs.h  $
+**   Revision 1.1 2015/07/28 12:22:02EDT rperera 
+**   Initial revision
+**   Member added to project /CFS-APPs-PROJECT/mm/fsw/src/project.pj
 **   Revision 1.9 2015/04/01 14:50:28EDT sstrege 
 **   Added criticality information to doxygen command descriptions
 **   Revision 1.8 2015/03/30 17:33:45EDT lwalling 
