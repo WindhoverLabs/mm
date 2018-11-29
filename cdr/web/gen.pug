@@ -3,7 +3,7 @@
     header
       span.widget-icon
         i.fa.fa-table
-      h2 MM - Command and Data Handling
+      h2 MM - General
     div.widget-body.table-responsive
       table.table.table-condensed
         tbody
@@ -38,24 +38,24 @@
           span.caret
         ul#ResetAppCounters.dropdown-menu(role='menu')
           li.cdr-dropdown-list-item
-            a(data-cdr={cmd:{name:'/MM/Peek', argument:[{name:'Payload.AppName', value:'CFE_ES'}]}, indicator:'cmd'}, data-placement="left") Peek
+            a(data-cdr={cmd:{name:'/MM/Peek'}, indicator:'cmd'}) Peek
           li.cdr-dropdown-list-item
-            a(data-cdr={cmd:{name:'/MM/Poke', argument:[{name:'Payload.AppName', value:'CF_EVS'}]}, indicator:'cmd'}, data-placement="left") Poke
+            a(data-cdr={cmd:{name:'/MM/Poke'}, indicator:'cmd'}) Poke
           li.cdr-dropdown-list-item
-            a(data-cdr={cmd:{name:'/MM/LoadMemWid', argument:[{name:'Payload.AppName', value:'CFE_SB'}]}, indicator:'cmd'}, data-placement="left") Load Memory Wid
+            a(data-cdr={cmd:{name:'/MM/LoadMemWid'}, indicator:'cmd'}) Load Memory Wid
           li.cdr-dropdown-list-item
-            a(data-cdr={cmd:{name:'/MM/LoadMemFromFile', argument:[{name:'Payload.AppName', value:'CFE_TBL'}]}, indicator:'cmd'}, data-placement="left") Load Memory From File
+            a(data-cdr={cmd:{name:'/MM/LoadMemFromFile'}, indicator:'cmd'}) Load Memory From File
           li.cdr-dropdown-list-item
-            a(data-cdr={cmd:{name:'/MM/DumpMemToFile', argument:[{name:'Payload.AppName', value:'CFE_TIME'}]}, indicator:'cmd'}, data-placement="left") Dump Memory To File
+            a(data-cdr={cmd:{name:'/MM/DumpMemToFile'}, indicator:'cmd'}) Dump Memory To File
           li.cdr-dropdown-list-item
-            a(data-cdr={cmd:{name:'/MM/DumpInEvt', argument:[{name:'Payload.AppName', value:'CF'}]}, indicator:'cmd'}, data-placement="left") Dump In Event
+            a(data-cdr={cmd:{name:'/MM/DumpInEvt'}, indicator:'cmd'}) Dump In Event
           li.cdr-dropdown-list-item
-            a(data-cdr={cmd:{name:'/MM/FillMem', argument:[{name:'Payload.AppName', value:'CIO'}]}, indicator:'cmd'}, data-placement="left") Fill Memory
+            a(data-cdr={cmd:{name:'/MM/FillMem'}, indicator:'cmd'}) Fill Memory
           li.cdr-dropdown-list-item
-            a(data-cdr={cmd:{name:'/MM/LookupSym', argument:[{name:'Payload.AppName', value:'CS'}]}, indicator:'cmd'}, data-placement="left") Lookup Symbol
+            a(data-cdr={cmd:{name:'/MM/LookupSym'}, indicator:'cmd'}) Lookup Symbol
           li.cdr-dropdown-list-item
-            a(data-cdr={cmd:{name:'/MM/SymTblToFile', argument:[{name:'Payload.AppName', value:'DS'}]}, indicator:'cmd'}, data-placement="left") Symbol Table To File
+            a(data-cdr={cmd:{name:'/MM/SymTblToFile'}, indicator:'cmd'}) Symbol Table To File
           li.cdr-dropdown-list-item
-            a(data-cdr={cmd:{name:'/MM/EnableEEPROMWrite', argument:[{name:'Payload.AppName', value:'PE'}]}, indicator:'cmd'}, data-placement="left") Enable EEPROM Write
+            a(data-cdr={cmd:{name:'/MM/EnableEEPROMWrite'}, indicator:'cmd'}) Enable EEPROM Write
           li.cdr-dropdown-list-item
-            a(data-cdr={cmd:{name:'/MM/DisableEEPROMWrite', argument:[{name:'Payload.AppName', value:'FM'}]}, indicator:'cmd'}, data-placement="left") Disable EEPROM Write
+            a(data-cdr={cmd:{name:'/MM/DisableEEPROMWrite'}, indicator:'cmd'}) Disable EEPROM Write
