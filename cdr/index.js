@@ -11,7 +11,7 @@ module.exports = class CfeCdrPlugin extends CdrPlugin {
 
   getContent() {
     var result = {
-      shortDescription: 'MM',
+      shortDescription: 'Memory Manager',
       longDescription: 'Memory Manager.',
       nodes: {
         main: {
