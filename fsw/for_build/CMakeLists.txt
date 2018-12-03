@@ -47,6 +47,7 @@ add_airliner_app_def(mm
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/mm_mem8.c
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/mm_mem8.h
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/mm_utils.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/mm_symbols.c
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/mm_utils.h
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/mm_verify.h
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/mm_version.h
