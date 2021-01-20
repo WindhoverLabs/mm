@@ -125,7 +125,7 @@
       struct: MM_HkPacket_t
   commands: 
     MM_CMD_MID: 
-      msgid: 
+      msgID: 
       commands: 
         Noop: 
           cc: 0
@@ -167,7 +167,7 @@
           cc: 12
           struct: MM_EepromWriteDisCmd_t
     MM_SEND_HK_MID: 
-      msgid: 
+      msgID: 
       commands: 
         SendHK: 
           cc: 0
