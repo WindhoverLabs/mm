@@ -31,7 +31,7 @@
  #
  #############################################################################
 
-add_airliner_app_def(mm
+buildliner_add_app_def(mm
     FILE MM
     SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/mm_app.c
@@ -62,7 +62,7 @@ add_airliner_app_def(mm
         ${PROJECT_SOURCE_DIR}/apps/mm/fsw/platform_inc
 )
 
-add_airliner_app_unit_test(mm-ut
+buildliner_add_app_def(mm-ut
     UTASSERT
     NO_HELGRIND
     NO_MASSIF
