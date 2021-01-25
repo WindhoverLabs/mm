@@ -56,9 +56,6 @@ add_airliner_app_def(mm
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/
 
     DESIGN_DOCS ${CMAKE_CURRENT_SOURCE_DIR}/detail_doxy.in
-
-
-    DESIGN_DEFINITION ${CMAKE_CURRENT_SOURCE_DIR}/mm_msg_overrides.json
     
     REFERENCE_CONFIG
         ${PROJECT_SOURCE_DIR}/apps/mm/fsw/mission_inc
